@@ -41,5 +41,5 @@ class Session(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("user.id"))
     token: Mapped[str] = mapped_column(String, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, default=get_default_expires_at)
+    expires_at: Mapped[datetime]
     user: Mapped["User"] = relationship(back_populates="sessions", uselist=False)
