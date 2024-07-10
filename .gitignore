@@ -4,3 +4,4 @@ certs/
 .idea/
 .env
 .env_db
+__pycache__/    
