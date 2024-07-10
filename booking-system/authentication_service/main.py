@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 authentication_app = FastAPI()
 
 # Attaching routers to authentication_app
-authentication_app.include_router(user_router)
+# authentication_app.include_router(user_router)
 
 # CORS for frontend(soon)
 origins = []

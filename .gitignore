@@ -1,3 +1,6 @@
 venv/
 .vscode/
 certs/
+.idea/
+.env
+.env_db
