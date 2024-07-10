@@ -29,7 +29,7 @@ class AuthJWT(BaseModel):
 
     @staticmethod
     def read_key(file_path: Path) -> str:
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding="utf-8") as file:
             return file.read()
 
     def __init__(self, **kwargs):
