@@ -5,11 +5,6 @@ from pydantic import BaseModel
 
 
 class PostgresDatabaseSettings(BaseModel):
-    host: str
-    port: int
-    name: str
-    user: str
-    password: str
     url: str
 
     naming_convention: dict[str, str] = {
@@ -43,15 +38,15 @@ class AuthJWT(BaseModel):
         
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env_db",
+        env_file=".env",
         case_sensitive=False,
         env_nested_delimiter="__"
     )
     auth_jwt: AuthJWT = AuthJWT(
-        private_key_path="certs" / "jwt-private.pem",
-        public_key_path="certs" / "jwt-public.pem"
+        private_key_path="certs/jwt-private.pem",
+        public_key_path="certs/jwt-public.pem"
     )
     db: PostgresDatabaseSettings
 
 
-settings = Settings()
+settings: Settings = Settings()
