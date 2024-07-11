@@ -5,3 +5,5 @@ certs/
 .env
 .env_db
 __pycache__/    
+certs/
+rabbitmq-data/
