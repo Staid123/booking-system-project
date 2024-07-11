@@ -2,11 +2,11 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel
 
-BASE_DIR = Path(__file__)
+AUTHENTICATION_SERVICE_DIR = Path(__file__).parent
 
 
-private_key_path: Path = BASE_DIR.parent / "certs" / "jwt-private.pem"
-public_key_path: Path = BASE_DIR.parent / "certs" / "jwt-public.pem"
+private_key_path: Path = AUTHENTICATION_SERVICE_DIR / "certs" / "jwt-private.pem"
+public_key_path: Path = AUTHENTICATION_SERVICE_DIR / "certs" / "jwt-public.pem"
 
 
 class PostgresDatabaseURL(BaseModel):
