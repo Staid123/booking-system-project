@@ -8,3 +8,9 @@ class UserSchema(BaseModel):
     password: bytes
     email: EmailStr | None = None
     active: bool = True
+
+
+class TokenInfo(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
