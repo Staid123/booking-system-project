@@ -2,9 +2,18 @@ import logging
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter, 
+    Depends, 
+    HTTPException, 
+    status
+)
 
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import (
+    HTTPBearer, 
+    OAuth2PasswordBearer, 
+    OAuth2PasswordRequestForm
+)
 
 from jwt import InvalidTokenError
 
@@ -15,7 +24,8 @@ from .custom_exceptions import (
     unauthed_user_exception,
     unactive_user_exception,
     token_not_found_exception,
-    invalid_token_error
+    invalid_token_error,
+    invalid_token_type_exception
 )
 
 from .utils import (
@@ -23,6 +33,12 @@ from .utils import (
     decode_jwt,
 )
 
+from .actions import (
+    TOKEN_TYPE_FIELD,
+    ACCESS_TOKEN_TYPE,
+    create_access_token, 
+    create_refresh_token
+)
 
 # Logger setup
 logging.basicConfig(
@@ -33,14 +49,15 @@ logging.basicConfig(
 # Use a logger for this module
 logger = logging.getLogger(__name__)
 
-# http_bearer = HTTPBearer()
+http_bearer = HTTPBearer(auto_error=False)
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/jwt/login/",
 )
 
 router = APIRouter(
     prefix="/jwt", 
-    tags=["UserAuth Operations"]
+    tags=["UserAuth Operations"],
+    dependencies=[Depends(http_bearer)]
 )
 
 # Проверка, что юзер зарегистрирован
@@ -67,10 +84,8 @@ def validate_auth_user(
 
 # Получение информации с токена 
 def get_current_token_payload(
-    # credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
     token: Annotated[str, Depends(oauth2_scheme)]
 ) -> dict:
-    # token = credentials.credentials
     try:
         payload = decode_jwt(
             token=token,
@@ -84,8 +99,11 @@ def get_current_token_payload(
 def get_current_auth_user(
     payload: Annotated[dict, Depends(get_current_token_payload)]
 ) -> UserSchema:
-    username: str | None = payload.get("sub")
-    if user := UserService.get_user_by_username(username):
+    token_type: str = payload.get(TOKEN_TYPE_FIELD)
+    if token_type != ACCESS_TOKEN_TYPE:
+        raise invalid_token_type_exception
+    email: str | None = payload.get("sub")
+    if user := UserService.get_user_by_email(email):
         return user
     raise token_not_found_exception
 
@@ -131,6 +149,9 @@ def create_user_handler(user_in: UserSchema):
         return f"{ex}: failure to create new user"
     
 
+
+
+
 @router.post(
     "/auth/login", 
     summary="Create access and refresh tokens for user", 
@@ -138,12 +159,7 @@ def create_user_handler(user_in: UserSchema):
 )
 def login_handler(user: Annotated[UserSchema, Depends(validate_auth_user)]):
     # Create access and refresh token using email
-    jwt_payload = {
-        "sub": user.email,
-        "username": user.username,
-        "email": user.email
-    }
-    access_token = create_access_token(user.email)
+    access_token = create_access_token(user)
     refresh_token = create_refresh_token(user.email)
 
     with ProducerAuthorization() as producer_auth:
@@ -154,15 +170,14 @@ def login_handler(user: Annotated[UserSchema, Depends(validate_auth_user)]):
     # Return access and refresh token
     return TokenInfo(
         access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="Bearer"
+        refresh_token=refresh_token
     )
 
 
 @router.get("/users/me/")
 def auth_user_check_self_info(
-    payload: dict = Depends(get_current_token_payload),
-    user: UserSchema = Depends(get_current_active_auth_user),
+    payload: Annotated[dict, Depends(get_current_token_payload)],
+    user: Annotated[UserSchema, Depends(get_current_active_auth_user)]
 ):
     iat = payload.get("iat")
     return {
