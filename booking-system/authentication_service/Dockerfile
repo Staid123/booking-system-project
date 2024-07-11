@@ -16,11 +16,5 @@ COPY . .
 # Установка зависимостей Python
 RUN pip install -r requirements.txt
 
-# установка прав на выполнение
-RUN chmod +x /entrypoint.sh
-
-# Установка entrypoint для выполнения миграций
-ENTRYPOINT ["/entrypoint.sh"]
-
 # Открытие портов
 EXPOSE 8001
