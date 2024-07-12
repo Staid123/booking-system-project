@@ -34,5 +34,5 @@ invalid_token_error = HTTPException(
 
 invalid_token_type_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail=f"invalid token type expected access"
+    detail=f"invalid token type"
 )
