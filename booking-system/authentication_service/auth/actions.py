@@ -1,7 +1,7 @@
 from datetime import timedelta
 from .schemas import UserSchema
 from .utils import encode_jwt
-from authentication_service.config import settings
+from config import settings
 
 
 TOKEN_TYPE_FIELD = "type"
