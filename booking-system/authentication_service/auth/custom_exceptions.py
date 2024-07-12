@@ -36,3 +36,8 @@ invalid_token_type_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail=f"invalid token type"
 )
+
+not_enough_rights_exception = HTTPException(
+    status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+    detail=f"have not enough rights exception"
+)
