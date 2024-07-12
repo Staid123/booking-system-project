@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class UserSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True, strict=True)
 
-    username: str | None = None
+    username: str
     password: bytes
     email: EmailStr
     active: bool = True
