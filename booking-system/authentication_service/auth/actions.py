@@ -1,6 +1,6 @@
 from datetime import timedelta
-from .schemas import UserSchema
-from .utils import encode_jwt
+from auth.schemas import UserSchema
+from auth.utils import encode_jwt
 from config import settings
 
 
