@@ -1,4 +1,4 @@
-version: '0.1'
+version: '3.8'  # Обновил версию на актуальную
 
 services:
   rabbitmq:
@@ -9,11 +9,10 @@ services:
     volumes:
       - "./rabbitmq-data:/var/lib/rabbitmq"
     healthcheck:
-      test: [ "CMD", "rabbitmqctl", "status" ]
+      test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
       timeout: 10s
       retries: 5
-
 
   authentication_service:
     build: ./authentication_service
@@ -25,7 +24,6 @@ services:
     volumes:
       - ./authentication_service:/auth_app
 
-
   authentication_database:
     image: postgres:latest
     env_file:
@@ -34,7 +32,6 @@ services:
       - "65400:5432"
     volumes:
       - postgres_authentication_database:/var/lib/postgresql/data/
-
 
   pgadmin:
     image: dpage/pgadmin4
@@ -45,7 +42,6 @@ services:
       - "5050:80"
     depends_on:
       - authentication_database
-
 
 volumes:
   postgres_authentication_database:
