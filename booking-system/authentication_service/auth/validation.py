@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
 from auth.utils import (
@@ -44,17 +44,18 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 # Проверка, что юзер зарегистрирован
 def validate_auth_user(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    email: str = Form(),
+    password: str = Form(),
 ):
     # Get user by username
-    if not (user := UserService.get_user_by_username(form_data.username)):
+    if not (user := UserService.get_user_by_email(email)):
         raise unauthed_user_exception
 
     if not validate_password(
-        password=form_data.password,
+        password=password,
         hashed_password=user.password,
     ):
-        logger.warning(f"Login attempt failed. Incorrect password for user '{form_data.username}'.")
+        logger.warning(f"Login attempt failed. Incorrect password for user with email: '{email}'.")
         raise unauthed_user_exception
 
     if not user.active:
@@ -82,7 +83,7 @@ def get_current_token_payload(
         payload = decode_jwt(
             token=token,
         )
-    except InvalidTokenError as e:
+    except InvalidTokenError:
         raise invalid_token_error
     return payload
 
