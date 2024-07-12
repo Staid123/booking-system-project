@@ -1,3 +1,3 @@
 #!/bin/bash
-alembic upgrade head
-exec "$@"
+echo "Running alembic upgrade head"
+python -m alembic upgrade head

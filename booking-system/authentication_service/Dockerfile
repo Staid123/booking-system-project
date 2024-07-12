@@ -16,5 +16,14 @@ COPY . .
 # Установка зависимостей Python
 RUN pip install -r requirements.txt
 
+# установка прав для скрипта миграций
+RUN chmod +x /auth_app/run_migrations.sh
+
 # Открытие портов
 EXPOSE 8001
+
+# Запуск скрипта миграций при сборке контейнера
+RUN /auth_app/run_migrations.sh
+
+# Команда по умолчанию для запуска приложения
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
