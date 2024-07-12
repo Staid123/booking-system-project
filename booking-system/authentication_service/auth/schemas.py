@@ -6,11 +6,11 @@ class UserSchema(BaseModel):
 
     username: str
     password: bytes
-    email: EmailStr | None = None
+    email: EmailStr
     active: bool = True
 
 
 class TokenInfo(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str | None = None
     token_type: str = "Bearer"

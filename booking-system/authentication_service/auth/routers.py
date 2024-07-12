@@ -9,36 +9,24 @@ from fastapi import (
     status
 )
 
-from fastapi.security import (
-    HTTPBearer, 
-    OAuth2PasswordBearer, 
-    OAuth2PasswordRequestForm
+from fastapi.security import HTTPBearer
+
+from auth.schemas import TokenInfo, UserSchema
+
+from auth.custom_exceptions import UserCreateException
+
+from auth.validation import (
+    validate_auth_user,
+    get_current_token_payload,
+    get_current_active_auth_user,
+    get_current_auth_user_for_refresh,
 )
 
-from jwt import InvalidTokenError
-
-from .schemas import TokenInfo, UserSchema
-
-from .custom_exceptions import (
-    UserCreateException,
-    unauthed_user_exception,
-    unactive_user_exception,
-    token_not_found_exception,
-    invalid_token_error,
-    invalid_token_type_exception
-)
-
-from .utils import (
-    validate_password,
-    decode_jwt,
-)
-
-from .actions import (
-    TOKEN_TYPE_FIELD,
-    ACCESS_TOKEN_TYPE,
+from auth.actions import (
     create_access_token, 
     create_refresh_token
 )
+
 
 # Logger setup
 logging.basicConfig(
@@ -49,73 +37,15 @@ logging.basicConfig(
 # Use a logger for this module
 logger = logging.getLogger(__name__)
 
+# интерфейс для введения токена (который автоматически отправляеятся в заголовки) после логина
 http_bearer = HTTPBearer(auto_error=False)
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/jwt/login/",
-)
+
 
 router = APIRouter(
     prefix="/jwt", 
     tags=["UserAuth Operations"],
     dependencies=[Depends(http_bearer)]
 )
-
-# Проверка, что юзер зарегистрирован
-def validate_auth_user(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-):
-    # Get user by username
-    if not (user := UserService.get_user_by_username(form_data.username)):
-        raise unauthed_user_exception
-
-    if not validate_password(
-        password=form_data.password,
-        hashed_password=user.password,
-    ):
-        logger.warning(f"Login attempt failed. Incorrect password for user '{form_data.username}'.")
-        raise unauthed_user_exception
-
-    if not user.active:
-        raise unactive_user_exception
-    
-    logger.info(f"Login attempt with username: {user.username}")
-    return user
-
-
-# Получение информации с токена 
-def get_current_token_payload(
-    token: Annotated[str, Depends(oauth2_scheme)]
-) -> dict:
-    try:
-        payload = decode_jwt(
-            token=token,
-        )
-    except InvalidTokenError as e:
-        raise invalid_token_error
-    return payload
-
-
-# Проверка, что юзер аутентифицирован
-def get_current_auth_user(
-    payload: Annotated[dict, Depends(get_current_token_payload)]
-) -> UserSchema:
-    token_type: str = payload.get(TOKEN_TYPE_FIELD)
-    if token_type != ACCESS_TOKEN_TYPE:
-        raise invalid_token_type_exception
-    email: str | None = payload.get("sub")
-    if user := UserService.get_user_by_email(email):
-        return user
-    raise token_not_found_exception
-
-
-
-# Проверка, что юзер аутентифицирован + активен
-def get_current_active_auth_user(
-    user: UserSchema = Depends(get_current_auth_user),
-):
-    if user.active:
-        return user
-    raise unactive_user_exception
 
 
 @router.post(
@@ -149,9 +79,6 @@ def create_user_handler(user_in: UserSchema):
         return f"{ex}: failure to create new user"
     
 
-
-
-
 @router.post(
     "/auth/login", 
     summary="Create access and refresh tokens for user", 
@@ -172,6 +99,22 @@ def login_handler(user: Annotated[UserSchema, Depends(validate_auth_user)]):
         access_token=access_token,
         refresh_token=refresh_token
     )
+
+
+@router.post(
+    "/refresh/", 
+    response_model=TokenInfo,
+    response_model_exclude_none=True
+)
+def auth_refresh_jwt(
+    user: Annotated[UserSchema, Depends(get_current_auth_user_for_refresh)]
+): 
+    # можно выпускать еще refresh токен при обновлении access (некоторые так делают)
+    access_token = create_access_token(user)
+    return TokenInfo(
+        access_token=access_token
+    )
+
 
 
 @router.get("/users/me/")
