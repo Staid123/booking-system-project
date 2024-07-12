@@ -44,6 +44,8 @@ http_bearer = HTTPBearer(auto_error=False)
 router = APIRouter(
     prefix="/jwt", 
     tags=["UserAuth Operations"],
+    # нужно, чтобы на каждый эндпоинт приходил токен автоматически (для этого указан auto_error=True, 
+    # чтобы токен не надо было вводить вручную везде)
     dependencies=[Depends(http_bearer)]
 )
 
@@ -68,7 +70,6 @@ def create_user_handler(user_in: UserSchema):
         user_id = UserService.register_user(user_in)
         logger.info(f"User created successfully: {user_in.username}")
         return {
-            "status_code": 200,
             "user": {
                 "user_id": user_id,
                 **user_in.model_dump()

@@ -2,7 +2,7 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer #, OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
 from auth.utils import (
     validate_password,
