@@ -8,15 +8,16 @@ from auth.utils import (
     validate_password,
     decode_jwt
 )
-
-from auth.schemas import UserSchema
-
+from database import db_helper
+from auth.schemas import UserIn, UserOut
+from sqlalchemy.orm import Session
 from auth.custom_exceptions import (
     unactive_user_exception,
     unauthed_user_exception,
     invalid_token_type_exception,
     token_not_found_exception,
-    invalid_token_error
+    invalid_token_error,
+    not_enough_rights_exception
 )
 
 from auth.actions import (
@@ -25,6 +26,7 @@ from auth.actions import (
     ACCESS_TOKEN_TYPE,
 )
 
+from service.user_service import UserService, get_user_service
 
 # Logger setup
 logging.basicConfig(
@@ -44,16 +46,22 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 # Проверка, что юзер зарегистрирован
 def validate_auth_user(
+    session: Annotated[Session, Depends(db_helper.session_getter)],
+    user_service: Annotated[UserService, Depends(get_user_service)],
     email: str = Form(),
     password: str = Form(),
 ):
     # Get user by username
-    if not (user := UserService.get_user_by_email(email)):
+    if not (
+        user := user_service.get_user_by_email(
+            session=session, email=email
+        )
+    ):
         raise unauthed_user_exception
 
     if not validate_password(
         password=password,
-        hashed_password=user.password,
+        hashed_password=user.password_hash,
     ):
         logger.warning(f"Login attempt failed. Incorrect password for user with email: '{email}'.")
         raise unauthed_user_exception
@@ -91,9 +99,10 @@ def get_current_token_payload(
 # Получение пользователя по полю sub из токена
 def get_user_by_token_sub(
     payload: dict,
-) -> UserSchema:
+    user_service: UserService = get_user_service(),
+) -> UserOut:
     email: str | None = payload.get("sub")
-    if user := UserService.get_user_by_email(email):
+    if user := user_service.get_user_by_email(session=session, email=email):
         return user
     raise token_not_found_exception
 
@@ -104,7 +113,7 @@ def get_auth_user_from_token_of_type(token_type: str):
     def get_auth_user_from_token(
         # получаем токен с заголовков
         payload: Annotated[dict, Depends(get_current_token_payload)]
-    ) -> UserSchema:
+    ) -> UserOut:
         # проверяем, совпадает ли введенный токен с токеном в заголовке
         validate_token_type(payload=payload, token_type=token_type)
         # получаем данные по токену
@@ -120,8 +129,17 @@ get_current_auth_user_for_refresh = get_auth_user_from_token_of_type(token_type=
 
 # Проверка, что юзер аутентифицирован + активен
 def get_current_active_auth_user(
-    user: Annotated[UserSchema, Depends(get_current_auth_user)]
+    user: Annotated[UserIn, Depends(get_current_auth_user)]
 ):
     if user.active:
         return user
     raise unactive_user_exception
+
+
+# Проверка, что юзер является админом
+def get_current_active_auth_user_admin(
+    user: Annotated[UserIn, Depends(get_current_active_auth_user)]
+):
+    if user.admin:
+        return user
+    raise not_enough_rights_exception
