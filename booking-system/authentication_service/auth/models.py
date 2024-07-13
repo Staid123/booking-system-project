@@ -4,6 +4,8 @@ from sqlalchemy.orm import (
     mapped_column,
 )
 
+from sqlalchemy import Boolean, LargeBinary
+
 
 
 class Base(DeclarativeBase):
@@ -16,4 +18,6 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
     email: Mapped[str]
-    password_hash: Mapped[str]
+    password_hash: Mapped[bytes] = mapped_column(LargeBinary)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default='true')
+    admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default='false')
