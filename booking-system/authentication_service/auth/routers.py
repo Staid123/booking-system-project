@@ -8,10 +8,11 @@ from fastapi import (
     HTTPException, 
     status
 )
-
+from sqlalchemy.orm import Session
+from database import db_helper
 from fastapi.security import HTTPBearer
-
-from auth.schemas import TokenInfo, UserSchema
+from service.user_service import UserService, get_user_service
+from auth.schemas import TokenInfo, UserIn, UserOut
 
 from auth.custom_exceptions import UserCreateException
 
@@ -54,9 +55,16 @@ router = APIRouter(
     "/auth/signup", 
     summary="Create new user"
 )
-def create_user_handler(user_in: UserSchema):
+def create_user_handler(
+    session: Annotated[Session, Depends(db_helper.session_getter)],
+    user_service: Annotated[UserService, Depends(get_user_service)],
+    user_in: UserIn
+) -> dict:
     # Get user by email
-    user = UserService.get_user_by_email(user_in.email)
+    user: UserOut = user_service.get_user_by_email(
+        session=session,
+        email=user_in.email
+    )
 
     # If the user exists raise HTTPException
     if user:
@@ -67,7 +75,10 @@ def create_user_handler(user_in: UserSchema):
         )
     try:
         # Create user using repository for user
-        user_id = UserService.register_user(user_in)
+        user_id = user_service.register_user(
+            session=session,
+            user_in=user_in
+        )
         logger.info(f"User created successfully: {user_in.username}")
         return {
             "user": {
@@ -85,13 +96,13 @@ def create_user_handler(user_in: UserSchema):
     summary="Create access and refresh tokens for user", 
     response_model=TokenInfo
 )
-def login_handler(user: Annotated[UserSchema, Depends(validate_auth_user)]):
+def login_handler(user: Annotated[UserIn, Depends(validate_auth_user)]):
     # Create access and refresh token using email
     access_token = create_access_token(user)
-    refresh_token = create_refresh_token(user.email)
+    refresh_token = create_refresh_token(user)
 
-    with ProducerAuthorization() as producer_auth:
-        producer_auth.send_user_object_and_token_to_services(access_token, user)
+    # with ProducerAuthorization() as producer_auth:
+    #     producer_auth.send_user_object_and_token_to_services(access_token, user)
 
     logger.info(f"User '{user.username}' successfully logged in.")
 
@@ -105,10 +116,11 @@ def login_handler(user: Annotated[UserSchema, Depends(validate_auth_user)]):
 @router.post(
     "/refresh/", 
     response_model=TokenInfo,
-    response_model_exclude_none=True
+    response_model_exclude_none=True,
+    summary="Create new access token"
 )
 def auth_refresh_jwt(
-    user: Annotated[UserSchema, Depends(get_current_auth_user_for_refresh)]
+    user: Annotated[UserIn, Depends(get_current_auth_user_for_refresh)]
 ): 
     # можно выпускать еще refresh токен при обновлении access (некоторые так делают)
     access_token = create_access_token(user)
@@ -118,10 +130,14 @@ def auth_refresh_jwt(
 
 
 
-@router.get("/users/me/")
+@router.get(
+    "/users/me/", 
+    response_model=UserOut,
+    summary="Get user info"
+)
 def auth_user_check_self_info(
     payload: Annotated[dict, Depends(get_current_token_payload)],
-    user: Annotated[UserSchema, Depends(get_current_active_auth_user)]
+    user: Annotated[UserIn, Depends(get_current_active_auth_user)]
 ):
     iat = payload.get("iat")
     return {
@@ -129,3 +145,16 @@ def auth_user_check_self_info(
         "email": user.email,
         "logged_in_at": iat,
     }
+
+
+@router.get(
+    "/users/all/", 
+    response_model=list[UserOut],
+    summary="Get all users info"
+)
+def get_all_users(
+    user_service: Annotated[UserService, Depends(get_user_service)],
+    session: Annotated[Session, Depends(db_helper.session_getter)],
+    admin: Annotated[UserIn, Depends(get_current_active_auth_user)]
+):
+    return user_service.list_users(session=session)
