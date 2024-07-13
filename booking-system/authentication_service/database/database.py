@@ -1,7 +1,7 @@
 from typing import Generator
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
-from authentication_service.config import settings
+from config import settings
 
 
 class DatabaseHelper:
@@ -31,7 +31,7 @@ class DatabaseHelper:
     def dispose(self) -> None:
         self.engine.dispose()
 
-    def session_getter(self) -> Generator[Session, None]:
+    def session_getter(self):
         with self.session_factory() as session:
             yield session
 

@@ -27,4 +27,4 @@ EXPOSE 8001
 # RUN ./run_migrations.sh
 
 # Команда по умолчанию для запуска приложения
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001" && "bash" "run_migrations.sh"]
+CMD ["bash" "run_migrations.sh" && "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

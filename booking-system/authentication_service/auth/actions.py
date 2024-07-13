@@ -1,5 +1,5 @@
 from datetime import timedelta
-from auth.schemas import UserSchema
+from auth.schemas import UserIn
 from auth.utils import encode_jwt
 from config import settings
 
@@ -24,7 +24,7 @@ def create_jwt(
     )
 
 
-def create_access_token(user: UserSchema) -> str:
+def create_access_token(user: UserIn) -> str:
     jwt_payload = {
         # subject
         "sub": user.email,
@@ -39,7 +39,7 @@ def create_access_token(user: UserSchema) -> str:
     )
 
 
-def create_refresh_token(user: UserSchema) -> str:
+def create_refresh_token(user: UserIn) -> str:
     jwt_payload = {
         "sub": user.email,
         # "username": user.username,

@@ -1,13 +1,22 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 
-class UserSchema(BaseModel):
+class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, strict=True)
 
     username: str
-    password: bytes
     email: EmailStr
+    password_hash: str
+
+
+class UserIn(UserBase):
+    pass
+
+
+class UserOut(UserBase):
     active: bool = True
+    admin: bool = False
+    password_hash: bytes
 
 
 class TokenInfo(BaseModel):
