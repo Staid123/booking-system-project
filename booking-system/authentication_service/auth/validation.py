@@ -9,7 +9,7 @@ from auth.utils import (
     decode_jwt
 )
 from database import db_helper
-from auth.schemas import UserIn, UserOut
+from auth.schemas import UserOut
 from sqlalchemy.orm import Session
 from auth.custom_exceptions import (
     unactive_user_exception,
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 # интерфейс для введения имени и пароля, а затем автоматическое получение токена и отправка его в заголовки
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/jwt/login/",
+    tokenUrl="/jwt/auth/login/",
 )
 
 
@@ -48,13 +48,13 @@ oauth2_scheme = OAuth2PasswordBearer(
 def validate_auth_user(
     session: Annotated[Session, Depends(db_helper.session_getter)],
     user_service: Annotated[UserService, Depends(get_user_service)],
-    email: str = Form(),
+    username: str = Form(),
     password: str = Form(),
 ):
     # Get user by username
     if not (
         user := user_service.get_user_by_email(
-            session=session, email=email
+            session=session, email=username
         )
     ):
         raise unauthed_user_exception
@@ -63,7 +63,7 @@ def validate_auth_user(
         password=password,
         hashed_password=user.password_hash,
     ):
-        logger.warning(f"Login attempt failed. Incorrect password for user with email: '{email}'.")
+        logger.warning(f"Login attempt failed. Incorrect password for user with email: '{username}'.")
         raise unauthed_user_exception
 
     if not user.active:
@@ -102,7 +102,11 @@ def get_user_by_token_sub(
     user_service: UserService = get_user_service(),
 ) -> UserOut:
     email: str | None = payload.get("sub")
-    if user := user_service.get_user_by_email(session=session, email=email):
+    user: UserOut = user_service.get_user_by_email(
+        session=db_helper.session_factory(), 
+        email=email
+    )
+    if user and user.active:
         return user
     raise token_not_found_exception
 
@@ -129,8 +133,8 @@ get_current_auth_user_for_refresh = get_auth_user_from_token_of_type(token_type=
 
 # Проверка, что юзер аутентифицирован + активен
 def get_current_active_auth_user(
-    user: Annotated[UserIn, Depends(get_current_auth_user)]
-):
+    user: Annotated[UserOut, Depends(get_current_auth_user)]
+) -> UserOut:
     if user.active:
         return user
     raise unactive_user_exception
@@ -138,8 +142,8 @@ def get_current_active_auth_user(
 
 # Проверка, что юзер является админом
 def get_current_active_auth_user_admin(
-    user: Annotated[UserIn, Depends(get_current_active_auth_user)]
-):
+    user: Annotated[UserOut, Depends(get_current_active_auth_user)]
+) -> UserOut:
     if user.admin:
         return user
     raise not_enough_rights_exception
