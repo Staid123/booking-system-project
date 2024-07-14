@@ -4,22 +4,20 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter, 
-    Depends, 
-    HTTPException, 
+    Depends,
     status
 )
 from sqlalchemy.orm import Session
 from database import db_helper
 from fastapi.security import HTTPBearer
 from service.user_service import UserService, get_user_service
+from messaging.producer import ProducerAuthorization
 from auth.schemas import TokenInfo, UserIn, UserOut
 
-from auth.custom_exceptions import UserCreateException
+from auth.custom_exceptions import UserCreateException, user_already_exists_exception
 
 from auth.validation import (
     validate_auth_user,
-    get_current_token_payload,
-    get_current_active_auth_user,
     get_current_auth_user_for_refresh,
 )
 
@@ -43,23 +41,21 @@ http_bearer = HTTPBearer(auto_error=False)
 
 
 router = APIRouter(
-    prefix="/jwt", 
-    tags=["UserAuth Operations"],
-    # нужно, чтобы на каждый эндпоинт приходил токен автоматически (для этого указан auto_error=True, 
-    # чтобы токен не надо было вводить вручную везде)
-    dependencies=[Depends(http_bearer)]
+    prefix="/auth", 
+    tags=["Auth Operations"],
 )
 
 
 @router.post(
-    "/auth/signup", 
-    summary="Create new user"
+    "/signup", 
+    summary="Create new user",
+    status_code=status.HTTP_201_CREATED,
 )
 def create_user_handler(
     session: Annotated[Session, Depends(db_helper.session_getter)],
     user_service: Annotated[UserService, Depends(get_user_service)],
     user_in: UserIn
-) -> dict:
+):
     # Get user by email
     user: UserOut = user_service.get_user_by_email(
         session=session,
@@ -69,10 +65,7 @@ def create_user_handler(
     # If the user exists raise HTTPException
     if user:
         logger.warning(f"Attempted to create a user with an email that already exists: {user_in.email}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
-        )
+        raise user_already_exists_exception
     try:
         # Create user using repository for user
         user_id = user_service.register_user(
@@ -83,7 +76,7 @@ def create_user_handler(
         return {
             "user": {
                 "user_id": user_id,
-                **user_in.model_dump()
+                **user_in.model_dump(exclude_defaults=True)
                 }
             }
     except UserCreateException as ex:
@@ -92,17 +85,19 @@ def create_user_handler(
     
 
 @router.post(
-    "/auth/login", 
+    "/login", 
     summary="Create access and refresh tokens for user", 
     response_model=TokenInfo
 )
-def login_handler(user: Annotated[UserIn, Depends(validate_auth_user)]):
+def login_handler(
+    user: Annotated[UserOut, Depends(validate_auth_user)]
+) -> TokenInfo:
     # Create access and refresh token using email
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
 
-    # with ProducerAuthorization() as producer_auth:
-    #     producer_auth.send_user_object_and_token_to_services(access_token, user)
+    with ProducerAuthorization() as producer_auth:
+        producer_auth.send_user_object_and_token_to_services(access_token, user)
 
     logger.info(f"User '{user.username}' successfully logged in.")
 
@@ -117,44 +112,15 @@ def login_handler(user: Annotated[UserIn, Depends(validate_auth_user)]):
     "/refresh/", 
     response_model=TokenInfo,
     response_model_exclude_none=True,
+    status_code=status.HTTP_201_CREATED,
     summary="Create new access token"
 )
 def auth_refresh_jwt(
-    user: Annotated[UserIn, Depends(get_current_auth_user_for_refresh)]
-): 
+    user: Annotated[UserOut, Depends(get_current_auth_user_for_refresh)]
+) -> TokenInfo: 
     # можно выпускать еще refresh токен при обновлении access (некоторые так делают)
     access_token = create_access_token(user)
     return TokenInfo(
         access_token=access_token
     )
 
-
-
-@router.get(
-    "/users/me/", 
-    response_model=UserOut,
-    summary="Get user info"
-)
-def auth_user_check_self_info(
-    payload: Annotated[dict, Depends(get_current_token_payload)],
-    user: Annotated[UserIn, Depends(get_current_active_auth_user)]
-):
-    iat = payload.get("iat")
-    return {
-        "username": user.username,
-        "email": user.email,
-        "logged_in_at": iat,
-    }
-
-
-@router.get(
-    "/users/all/", 
-    response_model=list[UserOut],
-    summary="Get all users info"
-)
-def get_all_users(
-    user_service: Annotated[UserService, Depends(get_user_service)],
-    session: Annotated[Session, Depends(db_helper.session_getter)],
-    admin: Annotated[UserIn, Depends(get_current_active_auth_user)]
-):
-    return user_service.list_users(session=session)
