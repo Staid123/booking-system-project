@@ -1,4 +1,4 @@
-version: '3.8'  # Обновил версию на актуальную
+version: '3.8'
 
 services:
   rabbitmq:
@@ -24,6 +24,16 @@ services:
     volumes:
       - ./authentication_service:/auth_app
 
+  booking_service:
+    build: ./booking_service
+    command: uvicorn main:booking_app --host 0.0.0.0 --port 8001 --reload
+    ports:
+      - "8002:8002"
+    depends_on:
+      - booking_database
+    volumes:
+      - ./booking_service:/booking_app
+
   authentication_database:
     image: postgres:latest
     env_file:
@@ -32,6 +42,15 @@ services:
       - "65400:5432"
     volumes:
       - postgres_authentication_database:/var/lib/postgresql/data/
+
+  booking_database:
+    image: postgres:latest
+    env_file:
+      - ./booking_service/.env_db
+    ports:
+      - "65401:5432"
+    volumes:
+      - postgres_booking_database:/var/lib/postgresql/data/
 
   pgadmin:
     image: dpage/pgadmin4
@@ -42,6 +61,8 @@ services:
       - "5050:80"
     depends_on:
       - authentication_database
+      - booking_database
 
 volumes:
   postgres_authentication_database:
+  postgres_booking_database:

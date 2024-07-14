@@ -1,18 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from auth.routers import router as user_auth_router
+# from booking.routers import router as booking_router
 
 
 # An instance of FastAPI (for authentication service)
-authentication_app = FastAPI()
+booking_app = FastAPI()
 
 # Attaching routers to authentication_app
-authentication_app.include_router(user_auth_router)
+# authentication_app.include_router(booking_router)
 
 # CORS for frontend(soon)
 origins = []
-authentication_app.add_middleware(
+booking_app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,

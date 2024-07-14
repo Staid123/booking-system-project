@@ -37,11 +37,11 @@ class ProducerAuthorization:
             )
             self.start_consuming()
         except AMQPConnectionError as e:
-            logging.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
+            logger.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
 
     def send_user_object_and_token_to_services(self, token: str, user: UserIn):
         if self.connection is None:
-            logging.error("RabbitMQ connection is not established.")
+            logger.error("RabbitMQ connection is not established.")
             return  # Можно обработать ошибку, если соединение не установлено
         user_data: dict = user.model_dump(exclude={"password_hash"})
         data = {
@@ -65,16 +65,16 @@ class ProducerAuthorization:
         try:
             self.channel.start_consuming()
         except KeyboardInterrupt:
-            logging.info("Interrupted")
+            logger.info("Interrupted")
             self.stop_consuming()
 
 
     def stop_consuming(self):
         if self.channel is not None:
-            logging.info("STOP CONSUMING")
+            logger.info("STOP CONSUMING")
             self.channel.stop_consuming()
         if self.connection is not None:
-            logging.info("CONNECTION CLOSED")
+            logger.info("CONNECTION CLOSED")
             self.connection.close()
 
     def __enter__(self):
@@ -82,3 +82,5 @@ class ProducerAuthorization:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop_consuming()
+        if exc_type:
+            logger.error(f"An exception occurred: {exc_val}")
