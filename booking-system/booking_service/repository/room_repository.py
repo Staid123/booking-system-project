@@ -28,10 +28,10 @@ class RoomRepository(AbstractRepository):
     @staticmethod
     def get_rooms(
         session: Session,
-        skip: int,
-        limit: int,
         **filters
     ) -> list[Room]:
+        skip = filters.pop('skip', 0)
+        limit = filters.pop('limit', 10)
         stmt = (
             select(Room)
             .filter_by(**filters)

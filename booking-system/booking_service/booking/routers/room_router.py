@@ -1,12 +1,13 @@
+from datetime import date
 import logging
-from typing import Annotated
+from typing import Annotated, Any, Optional
 from service.room_service import RoomService, get_room_service
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from database import db_helper
 from booking.schemas import RoomOut, RoomIn, User, RoomUpdate
 from booking.utils import get_current_user
-
+from booking.enums import RoomStatus, RoomType
 
 # Logger setup
 logging.basicConfig(
@@ -24,18 +25,42 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[RoomOut])
-def get_rooms(
-    filters: dict,
-    booking_service: Annotated[RoomService, Depends(get_room_service)],
-    session : Annotated[Session, Depends(db_helper.session_getter)],
+def get_filters(
+    number: Optional[str] = Query(default=None),
+    type: Optional[RoomType] = Query(default=None),
+    price: Optional[int] = Query(default=None, ge=0),
+    status: Optional[RoomStatus] = Query(default=None),
+    description: Optional[str] = Query(default=None),
+    available_dates: Optional[list[date]] = Query(default=None),
     skip: int = Query(default=0, ge=0), 
     limit: int = Query(default=10, ge=1),
+) -> dict[str, Any]:
+    filters = {}
+    if number:
+        filters['number'] = number
+    if type:
+        filters['type'] = type
+    if price:
+        filters['price'] = price
+    if status:
+        filters['status'] = status
+    if description:
+        filters['description'] = description
+    if available_dates:
+        filters['available_dates'] = available_dates
+    filters['skip'] = skip
+    filters['limit'] = limit
+    return filters
+
+
+@router.get("/", response_model=list[RoomOut])
+def get_rooms(
+    booking_service: Annotated[RoomService, Depends(get_room_service)],
+    session : Annotated[Session, Depends(db_helper.session_getter)],
+    filters: dict[str, Any] = Depends(get_filters),
 ) -> list[RoomOut]:
     return booking_service.list_rooms(
         session=session,
-        skip=skip,
-        limit=limit,
         **filters
     )
 
@@ -54,7 +79,7 @@ def create_room(
     )
 
 
-@router.update("/{room_id}/", response_model=RoomOut, status_code=status.HTTP_205_RESET_CONTENT)
+@router.patch("/{room_id}/", response_model=RoomOut)
 def update_room(
     room_id: int,
     room_update: RoomUpdate,

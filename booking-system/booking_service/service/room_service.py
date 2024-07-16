@@ -26,15 +26,11 @@ class RoomService(AbstractRoomService):
     @staticmethod
     def list_rooms(
         session: Session,
-        skip: int,
-        limit: int,
         room_repository: RoomRepository = get_room_repository(),
         **filters,
     ) -> list[RoomOut]:
         rooms: list[Room] = room_repository.get_rooms(
             session=session,
-            skip=skip,
-            limit=limit,
             **filters
         )
         rooms_schemas = [RoomOut.model_validate(room, from_attributes=True) for room in rooms]

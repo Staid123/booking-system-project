@@ -28,7 +28,7 @@ class RoomUpdate(BaseModel):
     number: int | None = None
     type: list["RoomType"] | None = None
     price: int | None = None
-    status: "RoomStatus" | None = None
+    status: RoomStatus | None = None
     description: str | None = None
     available_dates: list[date] | None = None
 

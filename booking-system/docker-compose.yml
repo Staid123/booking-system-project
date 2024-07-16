@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   rabbitmq:
@@ -26,7 +26,7 @@ services:
 
   booking_service:
     build: ./booking_service
-    command: uvicorn main:booking_app --host 0.0.0.0 --port 8001 --reload
+    command: uvicorn main:booking_app --host 0.0.0.0 --port 8002 --reload
     ports:
       - "8002:8002"
     depends_on:
