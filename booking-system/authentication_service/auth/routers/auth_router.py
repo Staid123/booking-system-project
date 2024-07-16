@@ -9,7 +9,6 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from database import db_helper
-from fastapi.security import HTTPBearer
 from service.user_service import UserService, get_user_service
 from messaging.producer import ProducerAuthorization
 from auth.schemas import TokenInfo, UserIn, UserOut
@@ -35,9 +34,6 @@ logging.basicConfig(
 
 # Use a logger for this module
 logger = logging.getLogger(__name__)
-
-# интерфейс для введения токена (который автоматически отправляеятся в заголовки) после логина
-http_bearer = HTTPBearer(auto_error=False)
 
 
 router = APIRouter(

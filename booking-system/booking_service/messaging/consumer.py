@@ -22,7 +22,18 @@ class ConsumerAuthorization:
             self.json_data = None
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(host="rabbitmq", port=5672))
             self.channel = self.connection.channel()
+            # Обьявляем точку обмена
+            self.channel.exchange_declare(
+                exchange="", exchange_type="direct"
+            )
+            # Обьявляем очередь
             self.channel.queue_declare(queue="GET_TOKEN_AND_USER", durable=True)
+            # Связываем очередь с обменником
+            self.channel.queue_bind(
+                queue="GET_TOKEN_AND_USER", 
+                xchange="", 
+                routing_key="GET_TOKEN_AND_USER"
+            )
         except AMQPConnectionError as e:
             logging.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
 
