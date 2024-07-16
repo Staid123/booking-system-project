@@ -1,9 +1,5 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Annotated
-
-from fastapi import Depends
-
 from auth.models import User
 from repository.user_repository import (
     UserRepository, 

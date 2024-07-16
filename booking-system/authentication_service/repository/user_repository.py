@@ -34,7 +34,7 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
 
-class UserRepository:
+class UserRepository(AbstractRepository):
     @staticmethod
     def create_user(
         session: Session,

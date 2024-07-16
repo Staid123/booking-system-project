@@ -2,7 +2,7 @@ import logging
 
 import json
 import pika
-from auth.schemas import UserIn
+from auth.schemas import UserOut
 from pika.exceptions import AMQPConnectionError
 
 
@@ -25,21 +25,15 @@ class ProducerAuthorization:
                 pika.ConnectionParameters(host="rabbitmq", port=5672)
             )
             self.channel = self.connection.channel()
-            # Создаем обменник типа fanout
             self.channel.exchange_declare(
-                exchange="token and user", exchange_type="fanout"
+                exchange="", exchange_type="direct"
             )
-            # Создаем 1 очередь
             self.channel.queue_declare(queue="GET_TOKEN_AND_USER", durable=True)
-            # Связываем очередь с обменником
-            self.channel.queue_bind(
-                exchange="token and user", queue="GET_TOKEN_AND_USER"
-            )
             self.start_consuming()
         except AMQPConnectionError as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
 
-    def send_user_object_and_token_to_services(self, token: str, user: UserIn):
+    def send_user_object_and_token_to_services(self, token: str, user: UserOut):
         if self.connection is None:
             logger.error("RabbitMQ connection is not established.")
             return  # Можно обработать ошибку, если соединение не установлено
