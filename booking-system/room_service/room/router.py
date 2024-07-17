@@ -1,13 +1,11 @@
-from datetime import date
 import logging
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 from service.room_service import RoomService, get_room_service
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from database import db_helper
-from booking.schemas import RoomOut, RoomIn, User, RoomUpdate
-from booking.utils import get_current_user
-from booking.enums import RoomStatus, RoomType
+from room.schemas import RoomOut, RoomIn, User, RoomUpdate
+from room.utils import get_current_user, get_filters
 
 # Logger setup
 logging.basicConfig(
@@ -23,34 +21,6 @@ router = APIRouter(
     prefix="/room", 
     tags=["Room Operations"],
 )
-
-
-def get_filters(
-    number: Optional[str] = Query(default=None),
-    type: Optional[RoomType] = Query(default=None),
-    price: Optional[int] = Query(default=None, ge=0),
-    status: Optional[RoomStatus] = Query(default=None),
-    description: Optional[str] = Query(default=None),
-    available_dates: Optional[list[date]] = Query(default=None),
-    skip: int = Query(default=0, ge=0), 
-    limit: int = Query(default=10, ge=1),
-) -> dict[str, Any]:
-    filters = {}
-    if number:
-        filters['number'] = number
-    if type:
-        filters['type'] = type
-    if price:
-        filters['price'] = price
-    if status:
-        filters['status'] = status
-    if description:
-        filters['description'] = description
-    if available_dates:
-        filters['available_dates'] = available_dates
-    filters['skip'] = skip
-    filters['limit'] = limit
-    return filters
 
 
 @router.get("/", response_model=list[RoomOut])

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from booking.schemas import RoomIn, RoomOut, RoomUpdate, User
-from booking.models import Room
+from room.schemas import RoomIn, RoomOut, RoomUpdate, User
+from room.models import Room
 from repository.room_repository import RoomRepository, get_room_repository
 
 class AbstractRoomService(ABC):

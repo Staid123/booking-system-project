@@ -43,7 +43,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/signup", 
+    "/signup/", 
     summary="Create new user",
     status_code=status.HTTP_201_CREATED,
 )
@@ -81,7 +81,7 @@ def create_user_handler(
     
 
 @router.post(
-    "/login", 
+    "/login/", 
     summary="Create access and refresh tokens for user", 
     response_model=TokenInfo
 )
@@ -91,7 +91,6 @@ def login_handler(
     # Create access and refresh token using email
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
-
     with ProducerAuthorization() as producer_auth:
         producer_auth.send_user_object_and_token_to_services(access_token, user)
 

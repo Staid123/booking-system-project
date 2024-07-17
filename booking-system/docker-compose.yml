@@ -24,15 +24,15 @@ services:
     volumes:
       - ./authentication_service:/auth_app
 
-  booking_service:
-    build: ./booking_service
-    command: uvicorn main:booking_app --host 0.0.0.0 --port 8002 --reload
+  room_service:
+    build: ./room_service
+    command: uvicorn main:room_app --host 0.0.0.0 --port 8002 --reload
     ports:
       - "8002:8002"
     depends_on:
-      - booking_database
+      - room_database
     volumes:
-      - ./booking_service:/booking_app
+      - ./room_service:/room_app
 
   authentication_database:
     image: postgres:latest
@@ -43,14 +43,14 @@ services:
     volumes:
       - postgres_authentication_database:/var/lib/postgresql/data/
 
-  booking_database:
+  room_database:
     image: postgres:latest
     env_file:
-      - ./booking_service/.env_db
+      - ./room_service/.env_db
     ports:
       - "65401:5432"
     volumes:
-      - postgres_booking_database:/var/lib/postgresql/data/
+      - postgres_room_database:/var/lib/postgresql/data/
 
   pgadmin:
     image: dpage/pgadmin4
@@ -61,8 +61,8 @@ services:
       - "5050:80"
     depends_on:
       - authentication_database
-      - booking_database
+      - room_database
 
 volumes:
   postgres_authentication_database:
-  postgres_booking_database:
+  postgres_room_database:

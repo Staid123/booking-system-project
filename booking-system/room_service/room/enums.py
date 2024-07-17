@@ -17,7 +17,7 @@ class RoomStatus(Enum):
     CLEANING = "cleaning" # уборка
 
 
-class BookingStatus(Enum):
-    ACTIVE = "active"
-    CANCELED = "canceled"
-    FINISHED = "finished"
+# class BookingStatus(Enum):
+#     ACTIVE = "active"
+#     CANCELED = "canceled"
+#     FINISHED = "finished"

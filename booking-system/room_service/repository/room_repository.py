@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from booking.models import Room
-from booking.schemas import RoomIn, RoomUpdate
+from room.models import Room
+from room.schemas import RoomIn, RoomUpdate
 from database.database import Session
 
 

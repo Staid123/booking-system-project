@@ -1,5 +1,4 @@
 from datetime import date
-from typing import TYPE_CHECKING
 from sqlalchemy import (
     TIMESTAMP, 
     ForeignKey, 
@@ -14,15 +13,12 @@ from sqlalchemy.orm import (
     relationship
 )
 
-from sqlalchemy.ext.hybrid import hybrid_property
-
 from config import settings
 
-from booking.enums import (
-        RoomType, 
-        RoomStatus, 
-        BookingStatus
-    )
+from room.enums import (
+    RoomType, 
+    RoomStatus, 
+)
     
 
 
@@ -40,6 +36,8 @@ class Base(DeclarativeBase):
     
     
 class RoomAvailableDate(Base):
+    __tablename__= "room_available_date"
+
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
     date: Mapped[date]
     
@@ -47,8 +45,10 @@ class RoomAvailableDate(Base):
 
 
 class RoomTypeInfo(Base):
+    __tablename__= "room_type_info"
+
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
-    name = Mapped["RoomType"]
+    name = Mapped[RoomType]
 
     room = relationship("Room", back_populates="room_types")
 
@@ -56,23 +56,22 @@ class RoomTypeInfo(Base):
 class Room(Base):
     number: Mapped[int] = mapped_column(unique=True)
     price: Mapped[int]
-    status: Mapped["RoomStatus"]
+    status: Mapped[RoomStatus]
     description: Mapped[str]
     created_at: Mapped[date] = mapped_column(TIMESTAMP, server_default=func.now())
     updated_at: Mapped[date] = mapped_column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     available_dates = relationship("RoomAvailableDate", back_populates="room")
     room_types = relationship("RoomTypeInfo", back_populates="room")
-    bookings = relationship("Booking", back_populates="room")
 
 
-class Booking(Base):
-    room_id: Mapped[int] = mapped_column(ForeignKey("room.id"))
-    guest_id: Mapped[int]
-    check_in_date: Mapped[date]
-    check_out_date: Mapped[date]
-    status: Mapped["BookingStatus"]
-    room = relationship("Room", back_populates="bookings")
+# class Booking(Base):
+#     room_id: Mapped[int] = mapped_column(ForeignKey("room.id"))
+#     guest_id: Mapped[int]
+#     check_in_date: Mapped[date]
+#     check_out_date: Mapped[date]
+#     status: Mapped["BookingStatus"]
+#     room = relationship("Room", back_populates="bookings")
     # dates: Mapped[list[date]]
 
     # @hybrid_property

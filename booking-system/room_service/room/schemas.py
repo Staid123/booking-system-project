@@ -1,17 +1,25 @@
 from datetime import date
 from pydantic import BaseModel, ConfigDict, EmailStr
-from booking.enums import RoomStatus, RoomType
+from room.enums import RoomStatus, RoomType
+
+
+class RoomAvailableDate(BaseModel):
+    date: date
+
+
+class RoomTypeInfo(BaseModel):
+    name: "RoomType"
 
 
 class RoomBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, strict=True)
 
     number: int
-    type: list["RoomType"]
+    type: list["RoomTypeInfo"]
     price: int
-    status: "RoomStatus"
+    status: RoomStatus = RoomStatus.AVAILABLE
     description: str
-    available_dates: list[date] | None = None
+    available_dates: list[RoomAvailableDate] | None = None
 
 
 class RoomIn(RoomBase):
@@ -28,9 +36,9 @@ class RoomUpdate(BaseModel):
     number: int | None = None
     type: list["RoomType"] | None = None
     price: int | None = None
-    status: RoomStatus | None = None
+    status: RoomStatus = RoomStatus.AVAILABLE
     description: str | None = None
-    available_dates: list[date] | None = None
+    available_dates: list[RoomAvailableDate] | None = None
 
 
 class User(BaseModel):

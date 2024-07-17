@@ -7,8 +7,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Создание директории для приложения и установка рабочей директории
-RUN mkdir /booking_app
-WORKDIR /booking_app
+RUN mkdir /room_app
+WORKDIR /room_app
 
 # Копирование кода приложения
 COPY . .

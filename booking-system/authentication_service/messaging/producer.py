@@ -26,7 +26,7 @@ class ProducerAuthorization:
             )
             self.channel = self.connection.channel()
             self.channel.exchange_declare(
-                exchange="", exchange_type="direct"
+                exchange="services", exchange_type="direct"
             )
             self.channel.queue_declare(queue="GET_TOKEN_AND_USER", durable=True)
             self.start_consuming()
@@ -46,7 +46,7 @@ class ProducerAuthorization:
         message_bytes = message_body.encode()
 
         self.channel.basic_publish(
-            exchange='',
+            exchange='services',
             routing_key="GET_TOKEN_AND_USER",
             body=message_bytes,
             properties=pika.BasicProperties(

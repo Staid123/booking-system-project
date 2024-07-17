@@ -24,14 +24,14 @@ class ConsumerAuthorization:
             self.channel = self.connection.channel()
             # Обьявляем точку обмена
             self.channel.exchange_declare(
-                exchange="", exchange_type="direct"
+                exchange="services", exchange_type="direct"
             )
             # Обьявляем очередь
             self.channel.queue_declare(queue="GET_TOKEN_AND_USER", durable=True)
             # Связываем очередь с обменником
             self.channel.queue_bind(
                 queue="GET_TOKEN_AND_USER", 
-                xchange="", 
+                exchange="services", 
                 routing_key="GET_TOKEN_AND_USER"
             )
         except AMQPConnectionError as e:
@@ -43,6 +43,7 @@ class ConsumerAuthorization:
             self.json_data = json.loads(message_str)
             logger.info(f" [x] Received {self.json_data['token']} and {self.json_data['user']}")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            self.stop_consuming()
         except json.JSONDecodeError as e:
             logger.info(f"Failed to decode JSON: {e}")
             ch.basic_nack(delivery_tag=method.delivery_tag)
