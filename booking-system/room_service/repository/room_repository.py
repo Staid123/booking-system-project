@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from room.models import Room
-from room.schemas import RoomIn, RoomUpdate
+from room.schemas.room_schemas import RoomIn, RoomUpdate
 from database.database import Session
 
 
@@ -23,6 +24,11 @@ class AbstractRepository(ABC):
     def update_room():
         raise NotImplementedError
     
+    @staticmethod
+    @abstractmethod
+    def delete_room():
+        raise NotImplementedError
+
 
 class RoomRepository(AbstractRepository):
     @staticmethod
@@ -34,6 +40,10 @@ class RoomRepository(AbstractRepository):
         limit = filters.pop('limit', 10)
         stmt = (
             select(Room)
+            .options(
+                selectinload(Room.available_dates),
+                selectinload(Room.room_types)
+                )
             .filter_by(**filters)
             .offset(skip)
             .limit(limit)
@@ -65,23 +75,47 @@ class RoomRepository(AbstractRepository):
         room_update: RoomUpdate,
         room_id: int
     ) -> Room:
-        # try:
-            room: Room = session.get(Room, room_id)
-            if not room:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, 
-                    detail="Room not found"
-                )
+        room: Room = session.get(Room, room_id)
+        if not room:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Room not found"
+            )
+        try:
             for name, value in room_update.model_dump(exclude_unset=True).items():
                 setattr(room, name, value)
             session.commit()
-            return room
-        # except Exception:
-        #     session.rollback()
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail="Can not update room"
-        #     ) 
+            room_with_dates_and_types = (
+                session.query(Room)
+                .filter_by(id=room_id)
+                .options(
+                    selectinload(Room.available_dates),
+                    selectinload(Room.room_types)
+                )
+            ).first()
+            return room_with_dates_and_types
+        except Exception:
+            session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can not update room"
+            )
+        
+    @staticmethod
+    def delete_room(
+        session: Session,
+        room_id: int
+    ) -> None:
+        try:
+            room: Room = session.get(Room, room_id)
+            session.delete(room)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can not delete room"
+            )
 
 # Зависимость для получения репозитория
 def get_room_repository() -> RoomRepository:

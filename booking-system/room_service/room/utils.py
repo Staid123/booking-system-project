@@ -1,5 +1,4 @@
-import logging
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 import jwt
 from room.enums import RoomType
@@ -9,6 +8,8 @@ from datetime import (
     datetime
 )
 
+from room.schemas.user import User
+from room.schemas.token import TokenPayload
 
 from fastapi import (
     Depends,
@@ -22,10 +23,6 @@ from fastapi.security import OAuth2PasswordBearer
 
 from pydantic import (
     ValidationError
-)
-
-from messaging.consumer import (
-    ConsumerAuthorization,
 )
 
 from config import settings
@@ -50,7 +47,7 @@ def get_current_user(token: str = Depends(reusable_oauth)) -> User:
             algorithms=[settings.auth_jwt.algorithm]
         )
 
-        token_data = TokenPayload(**payload)
+        token_data: TokenPayload = TokenPayload(**payload)
         if datetime.fromtimestamp(token_data.exp) < datetime.now():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -63,11 +60,6 @@ def get_current_user(token: str = Depends(reusable_oauth)) -> User:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    # try:
-    #     with ConsumerAuthorization() as consumer_auth:
-    #         _, user = consumer_auth.receive_user_obj_and_token_from_auth_service()
-    # except Exception as e:
-    #     logging.error(f"Error while processing with ConsumerAuthorization: {e}")
     user: User = User(
         username=token_data.username,
         email=token_data.email,
@@ -80,6 +72,24 @@ def get_current_user(token: str = Depends(reusable_oauth)) -> User:
             detail="Could not find user",
         )
     return user
+
+
+def get_current_active_user(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if user.active:
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+        detail="User is not active"
+    )
+
+
+def get_admin_user(user: Annotated[User, Depends(get_current_active_user)]) -> User:
+    if user.admin:
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+        detail="Not enough rights"
+    )
 
 
 def get_filters(
