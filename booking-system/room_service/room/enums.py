@@ -9,12 +9,12 @@ class RoomType(Enum):
     DELUXE = "Делюкс"
 
 
-class RoomStatus(Enum):
-    AVAILABLE = "available" # доступен
-    BOOKED = "booked" # забронирован
-    MAINTENANCE = "maintenance" # обслуживается
-    OCCUPIED = "occupied" # занят
-    CLEANING = "cleaning" # уборка
+# class RoomStatus(Enum):
+#     AVAILABLE = "available" # доступен
+#     BOOKED = "booked" # забронирован
+#     MAINTENANCE = "maintenance" # обслуживается
+#     OCCUPIED = "occupied" # занят
+#     CLEANING = "cleaning" # уборка
 
 
 # class BookingStatus(Enum):

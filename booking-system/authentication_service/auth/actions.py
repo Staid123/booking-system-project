@@ -24,12 +24,13 @@ def create_jwt(
     )
 
 
-def create_access_token(user: UserIn) -> str:
+def create_access_token(user: UserIn, is_admin: bool) -> str:
     jwt_payload = {
         # subject
         "sub": user.email,
         "username": user.username,
         "email": user.email,
+        "admin": is_admin
         # "logged_in_at"
     }
     return create_jwt(

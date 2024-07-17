@@ -36,6 +36,11 @@ class AbstractUserService(ABC):
     @abstractmethod
     def update_user_ban_status_by_email():
         raise NotImplementedError
+    
+    @staticmethod
+    @abstractmethod
+    def check_user_is_admin():
+        raise NotImplementedError
 
 
 class UserService(AbstractUserService):
@@ -123,6 +128,17 @@ class UserService(AbstractUserService):
             }
         }
 
+    @staticmethod
+    def check_user_is_admin(
+        user_in: UserIn,
+        session: Session,
+    ) -> bool:
+        user = UserService.get_user_by_email(
+            session=session, 
+            email=user_in.email
+        )
+        return user.admin
+        
 
 # Зависимость для получения сервиса
 def get_user_service():

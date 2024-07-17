@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, EmailStr
-from room.enums import RoomStatus, RoomType
+from room.enums import RoomType
 
 
 class RoomAvailableDate(BaseModel):
@@ -15,11 +15,10 @@ class RoomBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, strict=True)
 
     number: int
-    type: list["RoomTypeInfo"]
+    # type: list["RoomTypeInfo"]
     price: int
-    status: RoomStatus = RoomStatus.AVAILABLE
     description: str
-    available_dates: list[RoomAvailableDate] | None = None
+    # available_dates: list[RoomAvailableDate] | None = None
 
 
 class RoomIn(RoomBase):
@@ -28,17 +27,14 @@ class RoomIn(RoomBase):
 
 class RoomOut(RoomBase):
     id: int
-    created_at: date
-    updated_at: date
+    created_at: datetime
+    updated_at: datetime
 
 
 class RoomUpdate(BaseModel):
     number: int | None = None
-    type: list["RoomType"] | None = None
     price: int | None = None
-    status: RoomStatus = RoomStatus.AVAILABLE
     description: str | None = None
-    available_dates: list[RoomAvailableDate] | None = None
 
 
 class User(BaseModel):
@@ -46,12 +42,18 @@ class User(BaseModel):
 
     username: str
     email: EmailStr
-    active: bool
-    admin: bool
+    active: bool = True
+    admin: bool = False
 
 
 class TokenPayload(BaseModel):
     model_config = ConfigDict(from_attributes=True, strict=True)
     
+    type: str
     sub: str
     exp: int
+    username: str
+    email: str
+    admin: bool
+    jti: bytes
+    iat: int

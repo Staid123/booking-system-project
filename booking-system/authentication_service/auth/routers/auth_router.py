@@ -86,13 +86,19 @@ def create_user_handler(
     response_model=TokenInfo
 )
 def login_handler(
-    user: Annotated[UserOut, Depends(validate_auth_user)]
+    user: Annotated[UserOut, Depends(validate_auth_user)],
+    session: Annotated[Session, Depends(db_helper.session_getter)],
+    user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> TokenInfo:
+    is_admin: bool = user_service.check_user_is_admin(
+        session=session, 
+        user_in=user
+    )
     # Create access and refresh token using email
-    access_token = create_access_token(user)
+    access_token = create_access_token(user, is_admin=is_admin)
     refresh_token = create_refresh_token(user)
-    with ProducerAuthorization() as producer_auth:
-        producer_auth.send_user_object_and_token_to_services(access_token, user)
+    # with ProducerAuthorization() as producer_auth:
+    #     producer_auth.send_user_object_and_token_to_services(access_token, user)
 
     logger.info(f"User '{user.username}' successfully logged in.")
 

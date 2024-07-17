@@ -2,7 +2,7 @@ import logging
 from typing import Any, Optional
 
 import jwt
-from room.enums import RoomStatus, RoomType
+from room.enums import RoomType
 
 from datetime import (
     date,
@@ -63,25 +63,29 @@ def get_current_user(token: str = Depends(reusable_oauth)) -> User:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    try:
-        with ConsumerAuthorization() as consumer_auth:
-            _, user = consumer_auth.receive_user_obj_and_token_from_auth_service()
-    except Exception as e:
-        logging.error(f"Error while processing with ConsumerAuthorization: {e}")
+    # try:
+    #     with ConsumerAuthorization() as consumer_auth:
+    #         _, user = consumer_auth.receive_user_obj_and_token_from_auth_service()
+    # except Exception as e:
+    #     logging.error(f"Error while processing with ConsumerAuthorization: {e}")
+    user: User = User(
+        username=token_data.username,
+        email=token_data.email,
+        admin=token_data.admin
+    )
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find user",
         )
-    return User(**user)
+    return user
 
 
 def get_filters(
     number: Optional[str] = Query(default=None),
     type: Optional[RoomType] = Query(default=None),
     price: Optional[int] = Query(default=None, ge=0),
-    status: Optional[RoomStatus] = Query(default=None),
     description: Optional[str] = Query(default=None),
     available_dates: Optional[list[date]] = Query(default=None),
     skip: int = Query(default=0, ge=0), 
@@ -94,8 +98,6 @@ def get_filters(
         filters['type'] = type
     if price:
         filters['price'] = price
-    if status:
-        filters['status'] = status
     if description:
         filters['description'] = description
     if available_dates:

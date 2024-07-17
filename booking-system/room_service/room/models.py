@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy import (
     TIMESTAMP, 
     ForeignKey, 
@@ -15,10 +15,7 @@ from sqlalchemy.orm import (
 
 from config import settings
 
-from room.enums import (
-    RoomType, 
-    RoomStatus, 
-)
+from room.enums import RoomType
     
 
 
@@ -56,10 +53,9 @@ class RoomTypeInfo(Base):
 class Room(Base):
     number: Mapped[int] = mapped_column(unique=True)
     price: Mapped[int]
-    status: Mapped[RoomStatus]
     description: Mapped[str]
-    created_at: Mapped[date] = mapped_column(TIMESTAMP, server_default=func.now())
-    updated_at: Mapped[date] = mapped_column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     available_dates = relationship("RoomAvailableDate", back_populates="room")
     room_types = relationship("RoomTypeInfo", back_populates="room")

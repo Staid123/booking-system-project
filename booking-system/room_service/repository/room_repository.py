@@ -65,18 +65,23 @@ class RoomRepository(AbstractRepository):
         room_update: RoomUpdate,
         room_id: int
     ) -> Room:
-        try:
+        # try:
             room: Room = session.get(Room, room_id)
-            for name, value in room_update.model_dump(exclude_none=True):
+            if not room:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, 
+                    detail="Room not found"
+                )
+            for name, value in room_update.model_dump(exclude_unset=True).items():
                 setattr(room, name, value)
             session.commit()
             return room
-        except Exception:
-            session.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Can not update room"
-            ) 
+        # except Exception:
+        #     session.rollback()
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Can not update room"
+        #     ) 
 
 # Зависимость для получения репозитория
 def get_room_repository() -> RoomRepository:
