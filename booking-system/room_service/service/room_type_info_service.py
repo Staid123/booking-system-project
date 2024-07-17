@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from room.schemas.room_type_schemas import RoomTypeInfoIn, RoomTypeInfoOut
-from room.schemas.user import User
-from room.models import RoomAvailableDate, RoomTypeInfo
+from room.models import RoomTypeInfo
 from repository.room_type_info_repository import RoomTypeInfoRepository, get_room_type_info_repository
 
 
@@ -31,7 +29,7 @@ class RoomTypeService(AbstractService):
         session: Session,
         room_type_info_repository: RoomTypeInfoRepository = get_room_type_info_repository(),
     ) -> list[RoomTypeInfoOut]:
-        room_types_info: list[RoomAvailableDate] = room_type_info_repository.get_room_type_info(
+        room_types_info: list[RoomTypeInfoOut] = room_type_info_repository.get_room_type_info(
             session=session,
             room_id=room_id
         )

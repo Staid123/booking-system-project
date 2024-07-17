@@ -10,5 +10,5 @@ class TokenPayload(BaseModel):
     username: str
     email: str
     admin: bool
-    jti: bytes
+    jti: str
     iat: int

@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
-    prefix="/available_date/",
+    prefix="/available_date",
+    tags=["Room Available Date Operations"]
 )
 
 

@@ -22,6 +22,7 @@ class RoomOut(RoomBase):
     updated_at: datetime
     room_types: list[RoomTypeInfo]
     available_dates: list[RoomAvailableDate]
+    
 
 
 class RoomUpdate(BaseModel):

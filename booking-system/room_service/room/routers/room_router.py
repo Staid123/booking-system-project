@@ -18,9 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(
-    prefix="/",
-)
+router = APIRouter(tags=["Room Operations"])
 
 
 @router.get("/", response_model=list[RoomOut])
@@ -77,6 +75,5 @@ def delete_room(
     if user:
         return room_service.delete_room(
             room_id=room_id,
-            user=user,
             session=session
         )

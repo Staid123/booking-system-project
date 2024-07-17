@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/type",
+    tags=["Room Type Operations"]
 )
 
 

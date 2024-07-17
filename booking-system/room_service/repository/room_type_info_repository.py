@@ -25,7 +25,7 @@ class AbstractRepository(ABC):
 
 class RoomTypeInfoRepository(AbstractRepository):
     @staticmethod
-    def get_room_available_dates(
+    def get_room_type_info(
         room_id: int,
         session: Session,
     ) -> list[RoomTypeInfo]:

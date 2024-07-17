@@ -3,7 +3,8 @@ from sqlalchemy import (
     TIMESTAMP, 
     ForeignKey, 
     MetaData, 
-    func
+    func,
+    Enum
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -45,7 +46,7 @@ class RoomTypeInfo(Base):
     __tablename__= "room_type_info"
 
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
-    name = Mapped[RoomType]
+    name: Mapped[Enum] = mapped_column(Enum(RoomType))
 
     room = relationship("Room", back_populates="room_types")
 

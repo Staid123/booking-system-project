@@ -27,10 +27,6 @@ from pydantic import (
 
 from config import settings
 
-from room.schemas import (
-    TokenPayload,
-    User
-)
 
 
 reusable_oauth = OAuth2PasswordBearer(
@@ -54,7 +50,7 @@ def get_current_user(token: str = Depends(reusable_oauth)) -> User:
                 detail="Token expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except (jwt.JWTError, ValidationError):
+    except (jwt.PyJWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
@@ -93,6 +89,7 @@ def get_admin_user(user: Annotated[User, Depends(get_current_active_user)]) -> U
 
 
 def get_filters(
+    id: Optional[int] = Query(default=None, ge=0),
     number: Optional[str] = Query(default=None),
     type: Optional[RoomType] = Query(default=None),
     price: Optional[int] = Query(default=None, ge=0),
@@ -102,6 +99,8 @@ def get_filters(
     limit: int = Query(default=10, ge=1),
 ) -> dict[str, Any]:
     filters = {}
+    if id:
+        filters['id'] = id
     if number:
         filters['number'] = number
     if type:
