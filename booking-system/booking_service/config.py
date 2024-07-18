@@ -2,11 +2,11 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel
 
-ROOM_SERVICE_DIR = Path(__file__).parent
+BOOKING_SERVICE_DIR = Path(__file__).parent
 
 
-private_key_path: Path = ROOM_SERVICE_DIR / "certs" / "jwt-private.pem"
-public_key_path: Path = ROOM_SERVICE_DIR / "certs" / "jwt-public.pem"
+private_key_path: Path = BOOKING_SERVICE_DIR / "certs" / "jwt-private.pem"
+public_key_path: Path = BOOKING_SERVICE_DIR / "certs" / "jwt-public.pem"
 
 
 class PostgresDatabaseURL(BaseModel):

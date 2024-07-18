@@ -22,7 +22,7 @@ async def log_requests(request: Request, call_next):
 
 
 # CORS for frontend(soon)
-origins = ["http://localhost:8002", ]
+origins = ["http://localhost:8002", "http://localhost:8003"]
 authentication_app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

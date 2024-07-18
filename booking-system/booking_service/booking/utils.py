@@ -1,20 +1,18 @@
 from typing import Annotated, Any, Optional
 
 import jwt
-from room.enums import RoomType
 
 from datetime import (
     date,
     datetime
 )
 
-from room.schemas.user import User
-from room.schemas.token import TokenPayload
+from booking.schemas import User, TokenPayload
+
 
 from fastapi import (
     Depends,
     HTTPException,
-    Query,
     status
 )
 from fastapi.security import OAuth2PasswordBearer
@@ -86,31 +84,3 @@ def get_admin_user(user: Annotated[User, Depends(get_current_active_user)]) -> U
         status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
         detail="Not enough rights"
     )
-
-
-def get_filters(
-    id: Optional[int] = Query(default=None, ge=0),
-    number: Optional[str] = Query(default=None),
-    type: Optional[RoomType] = Query(default=None),
-    price: Optional[int] = Query(default=None, ge=0),
-    description: Optional[str] = Query(default=None),
-    available_dates: Optional[date] = Query(default=None),
-    skip: int = Query(default=0, ge=0), 
-    limit: int = Query(default=10, ge=1),
-) -> dict[str, Any]:
-    filters = {}
-    if id:
-        filters['id'] = id
-    if number:
-        filters['number'] = number
-    if type:
-        filters['type'] = type
-    if price:
-        filters['price'] = price
-    if description:
-        filters['description'] = description
-    if available_dates:
-        filters['available_dates'] = available_dates
-    filters['skip'] = skip
-    filters['limit'] = limit
-    return filters

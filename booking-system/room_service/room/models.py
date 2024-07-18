@@ -1,11 +1,14 @@
-from datetime import date, datetime
 from sqlalchemy import (
     TIMESTAMP, 
     ForeignKey, 
     MetaData, 
     func,
-    Enum
+    Enum,
+    DATE,
+    Date
 )
+from datetime import date, datetime
+
 from sqlalchemy.orm import (
     Mapped,
     DeclarativeBase,
@@ -37,7 +40,7 @@ class RoomAvailableDate(Base):
     __tablename__= "room_available_date"
 
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
-    date: Mapped[date]
+    date: Mapped[Date] = mapped_column(DATE)
     
     room = relationship("Room", back_populates="available_dates")
 
@@ -60,33 +63,6 @@ class Room(Base):
 
     available_dates = relationship("RoomAvailableDate", back_populates="room")
     room_types = relationship("RoomTypeInfo", back_populates="room")
-
-
-# class Booking(Base):
-#     room_id: Mapped[int] = mapped_column(ForeignKey("room.id"))
-#     guest_id: Mapped[int]
-#     check_in_date: Mapped[date]
-#     check_out_date: Mapped[date]
-#     status: Mapped["BookingStatus"]
-#     room = relationship("Room", back_populates="bookings")
-    # dates: Mapped[list[date]]
-
-    # @hybrid_property
-    # def date_range(self):
-    #     return [self.check_in_date + timedelta(days=day) for day in range((self.check_out_date - self.check_in_date).days + 1)]
-
-    # @date_range.setter
-    # def date_range(self, value):
-    #     self.dates = value
-
-    # def __init__(self, guest_id, room_id, check_in_date, check_out_date, status):
-    #     self.guest_id = guest_id
-    #     self.room_id = room_id
-    #     self.check_in_date = check_in_date
-    #     self.check_out_date = check_out_date
-    #     self.status = status
-    #     self.dates = self.date_range
-
 
 
     
