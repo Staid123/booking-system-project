@@ -1,11 +1,11 @@
 from datetime import date
 import logging
-from typing import Annotated, Any
+from typing import Annotated
 from service.room_available_date_service import RoomAvailableDateService, get_room_available_date_service
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from database import db_helper
-from room.schemas.room_available_date_schemas import RoomAvailableDateOut, RoomAvailableDateIn
+from room.schemas.room_available_date_schemas import RoomAvailableDateOut, RoomAvailableDateIn, DatesToDelete
 from room.schemas.user import User
 from room.utils import get_current_active_user, get_admin_user
 
@@ -53,9 +53,10 @@ def create_room_available_date(
         )
 
 
-@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{room_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room_available_dates(
-    room_available_dates_dates: list[date],
+    room_id: int,
+    room_available_dates_dates: DatesToDelete,
     user: Annotated[User, Depends(get_admin_user)],
     session: Annotated[Session, Depends(db_helper.session_getter)],
     room_available_date_service: Annotated[RoomAvailableDateService, Depends(get_room_available_date_service)]
@@ -64,5 +65,6 @@ def delete_room_available_dates(
         return room_available_date_service.delete_room_available_dates(
             room_available_dates_dates=room_available_dates_dates,
             session=session,
+            room_id=room_id
         )
 

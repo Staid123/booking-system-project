@@ -3,7 +3,7 @@ from datetime import date
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from room.schemas.room_available_date_schemas import RoomAvailableDateIn
+from room.schemas.room_available_date_schemas import DatesToDelete, RoomAvailableDateIn
 from database.database import Session
 from room.models import RoomAvailableDate
 
@@ -54,15 +54,19 @@ class RoomAvailableDateRepository(AbstractRepository):
         
     @staticmethod
     def delete_room_available_dates(
-        room_available_dates_dates: list[date],
+        room_id: int,
+        room_available_dates_dates: DatesToDelete,
         session: Session
     ) -> None:
         try:
-            for room_available_dates_date in room_available_dates_dates:
-                stmt = select(RoomAvailableDate).where(RoomAvailableDate.date == room_available_dates_date)
+            for room_available_dates_date in room_available_dates_dates.dates:
+                stmt = select(RoomAvailableDate).where(
+                    (RoomAvailableDate.date == room_available_dates_date) &
+                    (RoomAvailableDate.room_id == room_id)
+                )
                 room_available_date: RoomAvailableDate = session.scalars(stmt).first()
                 session.delete(room_available_date)
-            session.commit()
+                session.commit()
         except Exception:
             session.rollback()
             raise HTTPException(

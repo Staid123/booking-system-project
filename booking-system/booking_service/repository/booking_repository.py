@@ -16,12 +16,12 @@ class AbstractRepository(ABC):
 
     @staticmethod
     @abstractmethod
-    def create_booking():
+    def get_booking_by_id():
         raise NotImplementedError
-    
+
     @staticmethod
     @abstractmethod
-    def update_booking():
+    def create_booking():
         raise NotImplementedError
     
     @staticmethod
@@ -57,71 +57,45 @@ class BookingRepository(AbstractRepository):
         return bookings
     
     @staticmethod
+    def get_booking_by_id(
+        session: Session,
+        booking_id: int
+    ) -> Booking:
+        return session.get(Booking, booking_id)
+
+
+    @staticmethod
     def create_booking(
         session: Session,
         booking_in: BookingIn
     ) -> Booking:
         try:
-            room = Booking(**booking_in.model_dump())
-            session.add(room)
+            booking = Booking(**booking_in.model_dump())
+            session.add(booking)
             session.commit()
-            return room
+            return booking
         except Exception:
             session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Can not add new room"
+                detail="Can not add new booking"
             )    
-
-    @staticmethod
-    def update_booking(
-        session: Session,
-        booking_update: BookingUpdate,
-        booking_id: int
-    ) -> Booking:
-        pass
-        # room: Room = session.get(Room, room_id)
-        # if not room:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND, 
-        #         detail="Room not found"
-        #     )
-        # try:
-        #     for name, value in room_update.model_dump(exclude_unset=True).items():
-        #         setattr(room, name, value)
-        #     session.commit()
-        #     room_with_dates_and_types = (
-        #         session.query(Room)
-        #         .filter_by(id=room_id)
-        #         .options(
-        #             selectinload(Room.available_dates),
-        #             selectinload(Room.room_types)
-        #         )
-        #     ).first()
-        #     return room_with_dates_and_types
-        # except Exception:
-        #     session.rollback()
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail="Can not update room"
-        #     )
         
     @staticmethod
     def delete_booking(
         session: Session,
         booking_id: int
     ) -> None:
-        pass
-        # try:
-        #     room: Room = session.get(Room, room_id)
-        #     session.delete(room)
-        #     session.commit()
-        # except Exception:
-        #     session.rollback()
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail="Can not delete room"
-        #     )
+        try:
+            booking: Booking = session.get(Booking, booking_id)
+            session.delete(booking)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can not delete booking"
+            )
 
 # Зависимость для получения репозитория
 def get_booking_repository() -> BookingRepository:

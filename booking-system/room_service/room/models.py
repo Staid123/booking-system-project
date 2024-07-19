@@ -1,7 +1,8 @@
 from sqlalchemy import (
     TIMESTAMP, 
     ForeignKey, 
-    MetaData, 
+    MetaData,
+    UniqueConstraint, 
     func,
     Enum,
     DATE,
@@ -43,6 +44,10 @@ class RoomAvailableDate(Base):
     date: Mapped[Date] = mapped_column(DATE)
     
     room = relationship("Room", back_populates="available_dates")
+
+    __table_args__ = (
+        UniqueConstraint('room_id', 'date'), 
+    )
 
 
 class RoomTypeInfo(Base):

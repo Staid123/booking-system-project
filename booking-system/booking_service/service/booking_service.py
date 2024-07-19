@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from booking.schemas import BookingIn, BookingOut, BookingUpdate
+from booking.schemas import BookingIn, BookingOut
 from booking.models import Booking
 from repository.booking_repository import BookingRepository, get_booking_repository
 
@@ -22,12 +22,6 @@ class AbstractBookingService(ABC):
     def create_booking():
         raise NotImplementedError
     
-    @staticmethod
-    @abstractmethod
-    def update_booking():
-        raise NotImplementedError
-    
-
     @staticmethod
     @abstractmethod
     def delete_booking():
@@ -92,51 +86,69 @@ class BookingService(AbstractBookingService):
         )
         with httpx.Client() as client:
             headers = {"Authorization": f"Bearer {token}"}
-            url = f"{ROOM_MICROSERVICE_URL}/{ROOM_AVAILABLE_DATE}/{room_dates}/"
+            url = f"{ROOM_MICROSERVICE_URL}/{ROOM_AVAILABLE_DATE}/"
             try:
-                response = client.delete(
+                response = client.request(
+                    method="DELETE",
                     url=url,
                     headers=headers,
+                    json={
+                        'dates': room_dates
+                    }
                 )
-                return BookingOut.model_validate(obj=booking, from_attributes=True)
+                if response.status_code == 204:
+                    return BookingOut.model_validate(obj=booking, from_attributes=True)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail="Can not delete dates from room service"
+                )
             except httpx.HTTPStatusError as exc:
                 raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
             except httpx.ConnectError as exc:
                 raise HTTPException(status_code=500, detail=f"Connection refused: {str(exc)}")
         
 
-
-
-
-    @staticmethod
-    def update_booking(
-        booking_id: int,
-        session: Session,
-        booking_update: BookingUpdate,
-        booking_repository: BookingRepository = get_booking_repository(),
-    ) -> BookingOut:
-        pass
-        # room: Room = room_repository.update_room(
-        #     room_id=room_id,
-        #     session=session,
-        #     room_update=room_update
-        # )
-        # return RoomOut.model_validate(obj=room, from_attributes=True)
-
-
     @staticmethod
     def delete_booking(
         booking_id: int,
+        token: str,
         session: Session,
         booking_repository: BookingRepository = get_booking_repository(),
     ) -> None:
-        pass
-        # return room_repository.delete_room(
-        #     room_id=room_id,
-        #     session=session,
-        # ) 
+        booking: Booking = booking_repository.get_booking_by_id(
+            session=session,
+            booking_id=booking_id
+        )
+        with httpx.Client() as client:
+            url = f"{ROOM_MICROSERVICE_URL}/{ROOM_AVAILABLE_DATE}/"
+            headers = {"Authorization": f"Bearer {token}"}
+            # Генерим даты от начала до конца бронирования
+            booking_dates = [(booking.check_in_date + timedelta(days=day)).strftime("%Y-%m-%d") for day in range((booking.check_out_date - booking.check_in_date).days + 1)]
+            try:
+                logging.info(f"Connecting to URL: {url} with headers: {headers}")
+                for date in booking_dates:
+                    response = client.request(
+                        method="POST",
+                        url=url,
+                        headers=headers,
+                        json={
+                            'room_id': booking.room_id,
+                            'date': date
+                        }
+                    )
+                    response.raise_for_status()
+
+            except httpx.HTTPStatusError as exc:
+                raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+            except httpx.ConnectError as exc:
+                raise HTTPException(status_code=500, detail=f"Connection refused: {str(exc)}")
+        return booking_repository.delete_booking(
+            booking_id=booking_id,
+            session=session,
+        ) 
 
 
 # Зависимость для получения сервиса
 def get_booking_service() -> BookingService:
     return BookingService
+                

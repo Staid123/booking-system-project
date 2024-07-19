@@ -19,3 +19,7 @@ class RoomAvailableDate(RoomAvailableDateIn):
 class RoomAvailableDateOut(RoomAvailableDate):
     pass
     
+
+
+class DatesToDelete(BaseModel):
+    dates: list[str]

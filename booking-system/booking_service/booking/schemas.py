@@ -20,8 +20,6 @@ class BookingOut(BookingIn):
 
 
 class BookingUpdate(BaseModel):
-    room_id: int | None = None
-    user_id: int | None = None
     check_in_date: date | None = None
     check_out_date: date | None = None
 

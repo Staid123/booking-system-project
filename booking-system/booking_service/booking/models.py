@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, UniqueConstraint
 from datetime import date
 
 from sqlalchemy.orm import (
@@ -30,4 +30,8 @@ class Booking(Base):
     user_id: Mapped[int]
     check_in_date: Mapped[date]
     check_out_date: Mapped[date]
+
+    __table_args__ = (
+        UniqueConstraint('room_id', 'check_in_date', 'check_out_date'),
+    )
 

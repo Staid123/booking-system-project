@@ -58,31 +58,17 @@ def create_booking(
         )
 
 
-@router.patch("/{booking_id}/", response_model=BookingOut)
-def update_booking(
-    booking_id: int,
-    booking_update: BookingUpdate,
-    user: Annotated[User, Depends(get_admin_user)],
-    booking_service: Annotated[BookingService, Depends(get_booking_service)],
-    session: Annotated[Session, Depends(db_helper.session_getter)]
-) -> BookingOut:
-    if user:
-        return booking_service.update_booking(
-            booking_id=booking_id,
-            booking_update=booking_update,
-            session=session,
-        )
-
-
 @router.delete("/{booking_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_booking(
     booking_id: int,
     user: Annotated[User, Depends(get_admin_user)],
+    token: Annotated[str, Depends(reusable_oauth)],
     booking_service: Annotated[BookingService, Depends(get_booking_service)],
     session: Annotated[Session, Depends(db_helper.session_getter)]
 ) -> None:
     if user:
         return booking_service.delete_booking(
             booking_id=booking_id,
-            session=session
+            session=session,
+            token=token
         )
