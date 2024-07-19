@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import date
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from room.schemas.room_available_date_schemas import RoomAvailableDateOut, RoomAvailableDateIn
@@ -43,7 +44,6 @@ class RoomAvailableDateService(AbstractService):
     @staticmethod
     def create_room_available_date(
         session: Session,
-        user: User,
         room_available_date_in: RoomAvailableDateIn,
         room_available_date_repository: RoomAvailableDateRepository = get_room_available_date_repository(),
     ) -> RoomAvailableDateOut:
@@ -57,12 +57,12 @@ class RoomAvailableDateService(AbstractService):
 
     @staticmethod
     def delete_room_available_dates(
-        room_available_dates_ids: list[int],
+        room_available_dates_dates: list[date],
         session: Session,
         room_available_date_repository: RoomAvailableDateRepository = get_room_available_date_repository(),
     ) -> None:
-        return room_available_date_repository.room_available_dates_ids(
-            room_available_dates_ids=room_available_dates_ids,
+        return room_available_date_repository.delete_room_available_dates(
+            room_available_dates_dates=room_available_dates_dates,
             session=session
         )
 

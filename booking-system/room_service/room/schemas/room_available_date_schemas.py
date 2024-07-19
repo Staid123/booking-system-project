@@ -3,7 +3,7 @@ from datetime import date
 
 
 class RoomAvailableDateBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True, strict=True)
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
     room_id: int
     date: date
 

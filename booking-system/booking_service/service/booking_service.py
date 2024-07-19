@@ -1,11 +1,15 @@
+import httpx
+import logging
 from abc import ABC, abstractmethod
-from datetime import date
+from datetime import date, timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from booking.schemas import BookingIn, BookingOut, BookingUpdate
 from booking.models import Booking
 from repository.booking_repository import BookingRepository, get_booking_repository
 
+ROOM_MICROSERVICE_URL = "http://room_service:8002"
+ROOM_AVAILABLE_DATE = "room/available_date"
 
 class AbstractBookingService(ABC):
     @staticmethod
@@ -36,11 +40,14 @@ class BookingService(AbstractBookingService):
         session: Session,
         booking_repository: BookingRepository = get_booking_repository(),
         check_date: date | None = None,
+        skip: int = 0,
+        limit: int = 10
     ) -> list[BookingOut]:
-        pass
         bookings: list[Booking] = booking_repository.get_bookings_by_date(
             session=session,
-            check_date=check_date
+            check_date=check_date,
+            skip=skip,            
+            limit=limit
         )
         bookings_schemas: list[BookingOut] = [BookingOut.model_validate(booking, from_attributes=True) for booking in bookings]
         return bookings_schemas
@@ -50,14 +57,55 @@ class BookingService(AbstractBookingService):
     def create_booking(
         session: Session,
         booking_in: BookingIn,
+        token: str,
         booking_repository: BookingRepository = get_booking_repository(),
     ) -> BookingOut:
-        pass
-        # room: Room = room_repository.create_room(
-        #     session=session,
-        #     room_in=room_in
-        # )
-        # return RoomOut.model_validate(obj=room, from_attributes=True)
+        with httpx.Client() as client:
+            url = f"{ROOM_MICROSERVICE_URL}/{ROOM_AVAILABLE_DATE}/{booking_in.room_id}/"
+            headers = {"Authorization": f"Bearer {token}"}
+            # Генерим даты от начала до конца бронирования
+            booking_dates = [(booking_in.check_in_date + timedelta(days=day)).strftime("%Y-%m-%d") for day in range((booking_in.check_out_date - booking_in.check_in_date).days + 1)]
+            logging.info(f"Dates: {booking_dates}")
+            try:
+                logging.info(f"Connecting to URL: {url} with params: {booking_in.room_id} and headers: {headers}")
+                response = client.get(
+                    url=url,
+                    headers=headers
+                )
+                response.raise_for_status()
+                response_data = response.json()
+                room_dates = [room.get('date') for room in response_data]
+                logging.info(f"Response data: {response_data}")  # Отладочная информация
+            except httpx.HTTPStatusError as exc:
+                raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+            except httpx.ConnectError as exc:
+                raise HTTPException(status_code=500, detail=f"Connection refused: {str(exc)}")
+        # Проверка все ли даты есть в room
+        if not all(date in room_dates for date in booking_dates):
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Not all desired days for booking are available"
+        )
+        booking: Booking = booking_repository.create_booking(
+            session=session,
+            booking_in=booking_in
+        )
+        with httpx.Client() as client:
+            headers = {"Authorization": f"Bearer {token}"}
+            url = f"{ROOM_MICROSERVICE_URL}/{ROOM_AVAILABLE_DATE}/{room_dates}/"
+            try:
+                response = client.delete(
+                    url=url,
+                    headers=headers,
+                )
+                return BookingOut.model_validate(obj=booking, from_attributes=True)
+            except httpx.HTTPStatusError as exc:
+                raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+            except httpx.ConnectError as exc:
+                raise HTTPException(status_code=500, detail=f"Connection refused: {str(exc)}")
+        
+
+
 
 
     @staticmethod

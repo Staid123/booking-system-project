@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from database import db_helper
 from booking.schemas import User, BookingIn, BookingOut, BookingUpdate
-from booking.utils import get_current_active_user, get_admin_user
+from booking.utils import get_current_active_user, get_admin_user, reusable_oauth
 
 # Logger setup
 logging.basicConfig(
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
-    prefix="/booking"
+    prefix="/booking",
     tags=["Booking Operations"]
 )
 
@@ -43,9 +43,10 @@ def get_bookings(
 
 
 @router.post("/", response_model=BookingOut, status_code=status.HTTP_201_CREATED)
-def create_room(
+def create_booking(
     booking_in: BookingIn,
     user: Annotated[User, Depends(get_admin_user)],
+    token: Annotated[str, Depends(reusable_oauth)],
     booking_service: Annotated[BookingService, Depends(get_booking_service)],
     session: Annotated[Session, Depends(db_helper.session_getter)]
 ) -> BookingOut:
@@ -53,6 +54,7 @@ def create_room(
         return booking_service.create_booking(
             booking_in=booking_in,
             session=session,
+            token=token
         )
 
 
@@ -73,14 +75,14 @@ def update_booking(
 
 
 @router.delete("/{booking_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(
+def delete_booking(
     booking_id: int,
     user: Annotated[User, Depends(get_admin_user)],
     booking_service: Annotated[BookingService, Depends(get_booking_service)],
     session: Annotated[Session, Depends(db_helper.session_getter)]
 ) -> None:
     if user:
-        return booking_service.delete_room(
+        return booking_service.delete_booking(
             booking_id=booking_id,
             session=session
         )

@@ -38,14 +38,21 @@ class BookingRepository(AbstractRepository):
         skip: int = 0,
         limit: int = 10
     ) -> list[Booking]:
-        pass
-        stmt = (
-            select(Booking)
-            .where(check_date >= Booking.check_in_date or check_date <= Booking.check_out_date)
-            .offset(skip)
-            .limit(limit)
-            .order_by(Booking.id)
-        )
+        if check_date:
+            stmt = (
+                select(Booking)
+                .where(Booking.check_in_date <= check_date, Booking.check_out_date >= check_date)
+                .offset(skip)
+                .limit(limit)
+                .order_by(Booking.id)
+            )
+        else: 
+            stmt = (
+                select(Booking)
+                .offset(skip)
+                .limit(limit)
+                .order_by(Booking.id)
+            )
         bookings: list[Booking] = session.scalars(stmt).all()
         return bookings
     
@@ -54,18 +61,17 @@ class BookingRepository(AbstractRepository):
         session: Session,
         booking_in: BookingIn
     ) -> Booking:
-        pass
-        # try:
-        #     room = Room(**room_in.model_dump())
-        #     session.add(room)
-        #     session.commit()
-        #     return room
-        # except Exception:
-        #     session.rollback()
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail="Can not add new room"
-        #     )    
+        try:
+            room = Booking(**booking_in.model_dump())
+            session.add(room)
+            session.commit()
+            return room
+        except Exception:
+            session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can not add new room"
+            )    
 
     @staticmethod
     def update_booking(

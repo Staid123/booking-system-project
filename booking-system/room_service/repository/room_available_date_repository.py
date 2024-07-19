@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from datetime import date
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from room.schemas.room_available_date_schemas import RoomAvailableDateIn
 from database.database import Session
 from room.models import RoomAvailableDate
@@ -52,12 +54,13 @@ class RoomAvailableDateRepository(AbstractRepository):
         
     @staticmethod
     def delete_room_available_dates(
-        room_available_dates_ids: list[int],
+        room_available_dates_dates: list[date],
         session: Session
     ) -> None:
         try:
-            for room_available_date_id in room_available_dates_ids:
-                room_available_date: RoomAvailableDate = session.get(RoomAvailableDate, room_available_date_id)
+            for room_available_dates_date in room_available_dates_dates:
+                stmt = select(RoomAvailableDate).where(RoomAvailableDate.date == room_available_dates_date)
+                room_available_date: RoomAvailableDate = session.scalars(stmt).first()
                 session.delete(room_available_date)
             session.commit()
         except Exception:

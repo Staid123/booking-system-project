@@ -1,3 +1,4 @@
+from datetime import date
 import logging
 from typing import Annotated, Any
 from service.room_available_date_service import RoomAvailableDateService, get_room_available_date_service
@@ -54,15 +55,14 @@ def create_room_available_date(
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room_available_dates(
-    room_available_dates_ids: list[int],
+    room_available_dates_dates: list[date],
     user: Annotated[User, Depends(get_admin_user)],
     session: Annotated[Session, Depends(db_helper.session_getter)],
     room_available_date_service: Annotated[RoomAvailableDateService, Depends(get_room_available_date_service)]
 ) -> None:
     if user:
         return room_available_date_service.delete_room_available_dates(
-            room_available_dates_ids=room_available_dates_ids,
+            room_available_dates_dates=room_available_dates_dates,
             session=session,
-            user=user
         )
 

@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class BookingBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True, strict=True)
+    model_config = ConfigDict(from_attributes=True)
 
     room_id: int
     user_id: int
