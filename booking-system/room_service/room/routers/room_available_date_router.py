@@ -59,7 +59,7 @@ def create_room_available_date(
 def delete_room_available_dates(
     room_id: int,
     room_available_dates_dates: DatesToDelete,
-    user: Annotated[User, Depends(get_admin_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(db_helper.session_getter)],
     room_available_date_service: Annotated[RoomAvailableDateService, Depends(get_room_available_date_service)]
 ) -> None:

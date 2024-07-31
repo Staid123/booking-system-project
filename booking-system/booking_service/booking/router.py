@@ -45,7 +45,7 @@ def get_bookings(
 @router.post("/", response_model=BookingOut, status_code=status.HTTP_201_CREATED)
 def create_booking(
     booking_in: BookingIn,
-    user: Annotated[User, Depends(get_admin_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     token: Annotated[str, Depends(reusable_oauth)],
     booking_service: Annotated[BookingService, Depends(get_booking_service)],
     session: Annotated[Session, Depends(db_helper.session_getter)]
@@ -54,6 +54,7 @@ def create_booking(
         return booking_service.create_booking(
             booking_in=booking_in,
             session=session,
+            user=user,
             token=token
         )
 
@@ -61,7 +62,7 @@ def create_booking(
 @router.delete("/{booking_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_booking(
     booking_id: int,
-    user: Annotated[User, Depends(get_admin_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     token: Annotated[str, Depends(reusable_oauth)],
     booking_service: Annotated[BookingService, Depends(get_booking_service)],
     session: Annotated[Session, Depends(db_helper.session_getter)]

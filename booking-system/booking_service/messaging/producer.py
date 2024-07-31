@@ -15,6 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+
 class ProducerNotification:
     channel = None
     connection = None
@@ -27,12 +28,12 @@ class ProducerNotification:
             self.channel.exchange_declare(
                 exchange="services", exchange_type="direct"
             )
-            self.channel.queue_declare(queue="GET_USERNAME_AND_EMAIL_AND_BOOKING", durable=True)
+            self.channel.queue_declare(queue="GET_BOOKING_INFORMATION", durable=True)
             self.start_consuming()
         except AMQPConnectionError as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
 
-    def send_username_and_email_to_services(self, username: str, email: str, booking: BookingOut):
+    def send_booking_information_to_notification_service(self, username: str, email: str, booking: BookingOut):
         if self.connection is None:
             logger.error("RabbitMQ connection is not established.")
             return  # Можно обработать ошибку, если соединение не установлено
@@ -43,12 +44,12 @@ class ProducerNotification:
                 **booking.model_dump()
             }
         }
-        message_body = json.dumps(data)
+        message_body = json.dumps(data, default=str)
         message_bytes = message_body.encode()
 
         self.channel.basic_publish(
             exchange='services',
-            routing_key="GET_USERNAME_AND_EMAIL_AND_BOOKING",
+            routing_key="GET_BOOKING_INFORMATION",
             body=message_bytes,
             properties=pika.BasicProperties(
                 delivery_mode=pika.DeliveryMode.Persistent

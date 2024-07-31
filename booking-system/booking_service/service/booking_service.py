@@ -1,10 +1,11 @@
+import json
 import httpx
 import logging
 from abc import ABC, abstractmethod
 from datetime import date, timedelta, datetime
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from booking.schemas import BookingIn, BookingOut
+from booking.schemas import BookingIn, BookingOut, User
 from booking.models import Booking
 from repository.booking_repository import BookingRepository, get_booking_repository
 from messaging.producer import ProducerNotification
@@ -53,6 +54,7 @@ class BookingService(AbstractBookingService):
         session: Session,
         booking_in: BookingIn,
         token: str,
+        user: User,
         booking_repository: BookingRepository = get_booking_repository(),
     ) -> BookingOut:
         with httpx.Client() as client:
@@ -99,12 +101,12 @@ class BookingService(AbstractBookingService):
                 )
                 if response.status_code == 204:
                     booking_out_schema = BookingOut.model_validate(obj=booking, from_attributes=True)
-                    # with ProducerNotification() as producer:
-                    #     producer.send_username_and_email_to_services(
-                    #         username=user.username, 
-                    #         email=user.email,
-                    #         booking=booking_out_schema
-                    #     )
+                    with ProducerNotification() as producer:
+                        producer.send_booking_information_to_notification_service(
+                            username=user.username, 
+                            email=user.email,
+                            booking=booking_out_schema
+                        )
                     return booking_out_schema
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST, 
@@ -142,14 +144,14 @@ class BookingService(AbstractBookingService):
             try:
                 logging.info(f"Connecting to URL: {url} with headers: {headers}")
                 for date in booking_dates:
+                    date = datetime.strptime(date, "%Y-%m-%d")
                     if date > datetime.now():
-                        response = client.request(
-                            method="POST",
+                        response = client.post(
                             url=url,
                             headers=headers,
                             json={
                                 'room_id': booking.room_id,
-                                'date': date
+                                'date': date.date().isoformat()
                             }
                         )
                         if response.status_code != 201:

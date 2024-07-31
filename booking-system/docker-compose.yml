@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.8'
 
 services:
   rabbitmq:
@@ -43,6 +43,11 @@ services:
       - booking_database
     volumes:
       - ./booking_service:/booking_app
+
+  notification_service:
+    build: ./notification_service
+    depends_on:
+      - rabbitmq
 
   authentication_database:
     image: postgres:latest
