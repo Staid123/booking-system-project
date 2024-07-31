@@ -83,6 +83,18 @@ services:
       - room_database
       - booking_database
 
+  # nginx:
+  #   image: nginx:latest
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - authentication_service
+  #     - room_service
+  #     - booking_service
+
+
 volumes:
   postgres_authentication_database:
   postgres_room_database:

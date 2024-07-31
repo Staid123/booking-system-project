@@ -1,11 +1,11 @@
 from datetime import date
 import logging
-from typing import Annotated, Any
+from typing import Annotated
 from service.booking_service import BookingService, get_booking_service
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from database import db_helper
-from booking.schemas import User, BookingIn, BookingOut, BookingUpdate
+from booking.schemas import User, BookingIn, BookingOut
 from booking.utils import get_current_active_user, get_admin_user, reusable_oauth
 
 # Logger setup

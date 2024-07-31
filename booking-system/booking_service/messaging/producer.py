@@ -2,9 +2,8 @@ import logging
 
 import json
 import pika
-from auth.schemas import UserOut
 from pika.exceptions import AMQPConnectionError
-
+from booking.schemas import BookingOut
 
 # Logger setup
 logging.basicConfig(
@@ -16,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class ProducerAuthorization:
+class ProducerNotification:
     channel = None
     connection = None
     def __init__(self):
@@ -28,32 +27,34 @@ class ProducerAuthorization:
             self.channel.exchange_declare(
                 exchange="services", exchange_type="direct"
             )
-            self.channel.queue_declare(queue="GET_TOKEN_AND_USER", durable=True)
+            self.channel.queue_declare(queue="GET_USERNAME_AND_EMAIL_AND_BOOKING", durable=True)
             self.start_consuming()
         except AMQPConnectionError as e:
             logger.error(f"Failed to connect to RabbitMQ: {e}!!!!!!!")
 
-    def send_user_object_and_token_to_services(self, token: str, user: UserOut):
+    def send_username_and_email_to_services(self, username: str, email: str, booking: BookingOut):
         if self.connection is None:
             logger.error("RabbitMQ connection is not established.")
             return  # Можно обработать ошибку, если соединение не установлено
-        user_data: dict = user.model_dump(exclude={"password_hash"})
         data = {
-            "token": token,
-            "user": user_data
+            "username": username,
+            "email": email,
+            "booking": {
+                **booking.model_dump()
+            }
         }
         message_body = json.dumps(data)
         message_bytes = message_body.encode()
 
         self.channel.basic_publish(
             exchange='services',
-            routing_key="GET_TOKEN_AND_USER",
+            routing_key="GET_USERNAME_AND_EMAIL_AND_BOOKING",
             body=message_bytes,
             properties=pika.BasicProperties(
                 delivery_mode=pika.DeliveryMode.Persistent
             )
         )
-        logger.info(f"[x] Sent: {token} and {user_data}")
+        logger.info(f"[x] Sent: {username} and {email}")
 
     def start_consuming(self):
         try:

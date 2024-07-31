@@ -10,7 +10,6 @@ from fastapi import (
 from sqlalchemy.orm import Session
 from database import db_helper
 from service.user_service import UserService, get_user_service
-from messaging.producer import ProducerAuthorization
 from auth.schemas import TokenInfo, UserIn, UserOut
 
 from auth.custom_exceptions import UserCreateException, user_already_exists_exception

@@ -14,6 +14,7 @@ class UserIn(UserBase):
 
 
 class UserOut(UserBase):
+    id: int
     active: bool = True
     admin: bool = False
     password_hash: bytes
