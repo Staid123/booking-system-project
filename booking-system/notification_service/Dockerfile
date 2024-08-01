@@ -21,4 +21,4 @@ RUN pip install -r requirements.txt
 # RUN ./run_migrations.sh
 
 # Команда по умолчанию для запуска приложения
-CMD ["python", "messaging/consumer.py"]
+CMD ["python", "consumer.py"]

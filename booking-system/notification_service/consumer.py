@@ -2,7 +2,7 @@ import pika
 import json
 import logging
 from pika.exceptions import AMQPConnectionError
-from main import send_email
+from utils import send_email
 
 # Logger setup
 logging.basicConfig(
@@ -58,7 +58,6 @@ class ConsumerNotification:
             self.channel.start_consuming()
         except KeyboardInterrupt:
             self.stop_consuming()
-        # return self.json_data["username"], self.json_data["email"], self.json_data["booking"]
 
     def stop_consuming(self):
         if self.channel is not None:
