@@ -77,5 +77,7 @@ class ConsumerNotification:
 
 
 if __name__ == "__main__":
-    with ConsumerNotification() as consumer:
-        consumer.receive_booking_information_from_booking_service()
+    consumer = ConsumerNotification()
+    consumer.receive_booking_information_from_booking_service()
+    # with ConsumerNotification() as consumer:
+    #     consumer.receive_booking_information_from_booking_service()

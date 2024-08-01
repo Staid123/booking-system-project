@@ -44,6 +44,16 @@ services:
     volumes:
       - ./booking_service:/booking_app
 
+  review_service:
+    build: ./review_service
+    command: uvicorn main:review_app --host 0.0.0.0 --port 8004 --reload
+    ports:
+      - "8004:8004"
+    depends_on:
+      - review_database
+    volumes:
+      - ./review_service:/review_app
+
   notification_service:
     build: ./notification_service
     depends_on:
@@ -76,6 +86,15 @@ services:
     volumes:
       - postgres_booking_database:/var/lib/postgresql/data/
 
+  review_database:
+    image: postgres:latest
+    env_file:
+      - ./review_service/.env_db
+    ports:
+      - "65403:5432"
+    volumes:
+      - postgres_booking_database:/var/lib/postgresql/data/
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -87,17 +106,19 @@ services:
       - authentication_database
       - room_database
       - booking_database
+      - review_database
 
-  # nginx:
-  #   image: nginx:latest
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     - authentication_service
-  #     - room_service
-  #     - booking_service
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - authentication_service
+      - room_service
+      - booking_service
+      - review_service
 
 
 volumes:
