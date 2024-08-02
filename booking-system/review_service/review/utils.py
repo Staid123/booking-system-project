@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any, Optional
 
 import jwt
 
@@ -86,29 +86,47 @@ def get_admin_user(user: Annotated[User, Depends(get_current_active_user)]) -> U
     )
 
 
-# def get_filters(
-#     id: Optional[int] = Query(default=None, ge=0),
-#     number: Optional[str] = Query(default=None),
-#     type: Optional[RoomType] = Query(default=None),
-#     price: Optional[int] = Query(default=None, ge=0),
-#     description: Optional[str] = Query(default=None),
-#     available_dates: Optional[date] = Query(default=None),
-#     skip: int = Query(default=0, ge=0), 
-#     limit: int = Query(default=10, ge=1),
-# ) -> dict[str, Any]:
-#     filters = {}
-#     if id:
-#         filters['id'] = id
-#     if number:
-#         filters['number'] = number
-#     if type:
-#         filters['type'] = type
-#     if price:
-#         filters['price'] = price
-#     if description:
-#         filters['description'] = description
-#     if available_dates:
-#         filters['available_dates'] = available_dates
-#     filters['skip'] = skip
-#     filters['limit'] = limit
-#     return filters
+def get_review_filters(
+    id: Optional[int] = Query(default=None, ge=0),
+    user_id: Optional[int] = Query(default=None, ge=0),
+    room_id: Optional[int] = Query(default=None, ge=0),
+    rating: Optional[int] = Query(default=None, ge=0),
+    skip: int = Query(default=0, ge=0), 
+    limit: int = Query(default=10, ge=1),
+) -> dict[str, Any]:
+    filters = {}
+    if id:
+        filters['id'] = id
+    if user_id:
+        filters['user_id'] = user_id
+    if room_id:
+        filters['room_id'] = room_id
+    if rating:
+        filters['rating'] = rating
+
+    filters['skip'] = skip
+    filters['limit'] = limit
+    return filters
+
+
+def get_answer_filters(
+    id: Optional[int] = Query(default=None, ge=0),
+    user_id: Optional[int] = Query(default=None, ge=0),
+    review_id: Optional[int] = Query(default=None, ge=0),
+    reviewer_id: Optional[int] = Query(default=None, ge=0),
+    skip: int = Query(default=0, ge=0), 
+    limit: int = Query(default=10, ge=1),
+) -> dict[str, Any]:
+    filters = {}
+    if id:
+        filters['id'] = id
+    if user_id:
+        filters['user_id'] = user_id
+    if review_id:
+        filters['review_id'] = review_id
+    if reviewer_id:
+        filters['reviewer_id'] = reviewer_id
+
+    filters['skip'] = skip
+    filters['limit'] = limit
+    return filters

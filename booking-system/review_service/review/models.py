@@ -3,6 +3,7 @@ from sqlalchemy import (
     CheckConstraint, 
     ForeignKey, 
     MetaData,
+    UniqueConstraint,
     func,
 )
 from datetime import datetime
@@ -44,11 +45,13 @@ class Review(Base):
 
     __table_args__ = (
         CheckConstraint('rating >= 1 AND rating <= 5', name='rating_range_check'),
+        UniqueConstraint("user_id", "room_id")
     )
 
 
 class Answer(Base):
     user_id: Mapped[int]
+    reviewer_id: Mapped[int]
     room_id: Mapped[int]
     review_id: Mapped[int] = mapped_column(ForeignKey('review.id'))
     comment: Mapped[str]

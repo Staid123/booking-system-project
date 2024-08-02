@@ -49,8 +49,8 @@ class RoomRepository(AbstractRepository):
             .limit(limit)
             .order_by(Room.id)
         )
-        users: list[Room] = session.scalars(stmt).all()
-        return users
+        rooms: list[Room] = session.scalars(stmt).all()
+        return rooms
     
     @staticmethod
     def create_room(

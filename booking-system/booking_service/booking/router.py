@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from database import db_helper
 from booking.schemas import User, BookingIn, BookingOut
-from booking.utils import get_current_active_user, get_admin_user, reusable_oauth
+from booking.utils import get_current_active_user, reusable_oauth
 
 # Logger setup
 logging.basicConfig(

@@ -1,6 +1,30 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-from .answer_schemas import AnswerBase
+
+
+class AnswerBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    user_id: int
+    room_id: int
+    review_id: int
+    comment: str
+
+
+class AnswerIn(AnswerBase):
+    pass
+
+
+class AnswerOut(AnswerIn):
+    id: int
+    reviewer_id: int
+    created_at: datetime
+    updated_at: datetime
+    review: "ReviewBase"
+
+
+class AnswerUpdate(BaseModel):
+    comment: str
 
 
 class ReviewBase(BaseModel):
@@ -21,7 +45,7 @@ class ReviewOut(ReviewIn):
     created_at: datetime
     updated_at: datetime
 
-    answers: "AnswerBase"
+    answers: list[AnswerBase | None] = []
 
 
 class ReviewUpdate(BaseModel):

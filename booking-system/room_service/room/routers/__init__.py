@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends
-from fastapi.security import HTTPBearer
+from fastapi import APIRouter
 from room.routers.room_available_date_router import router as room_available_date_router
 from room.routers.room_type_router import router as room_type_router
 from room.routers.room_router import router as room_router

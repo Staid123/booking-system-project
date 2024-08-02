@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -93,7 +91,7 @@ services:
     ports:
       - "65403:5432"
     volumes:
-      - postgres_booking_database:/var/lib/postgresql/data/
+      - postgres_review_database:/var/lib/postgresql/data/
 
   pgadmin:
     image: dpage/pgadmin4
@@ -125,3 +123,4 @@ volumes:
   postgres_authentication_database:
   postgres_room_database:
   postgres_booking_database:
+  postgres_review_database:
